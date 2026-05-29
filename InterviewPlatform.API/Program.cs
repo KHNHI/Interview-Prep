@@ -68,8 +68,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<InterviewPlatform.API.Middleware.ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
 app.UseCors();
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
