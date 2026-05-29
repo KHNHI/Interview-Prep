@@ -1,22 +1,66 @@
 import { createBrowserRouter } from "react-router-dom";
-import Layout from "./components/layout/Layout";
+import type { ComponentType } from "react";
+import Layout          from "./components/layout/Layout";
+import PublicLayout    from "./components/layout/PublicLayout";
+import ProtectedLayout from "./components/layout/ProtectedLayout";
+
+/**
+ * Maps a named export to the { Component } shape React Router lazy expects.
+ * Keeps each page file exporting a descriptive function name instead of
+ * the generic `Component`.
+ */
+function lazy<T extends Record<string, ComponentType>>(
+  importFn: () => Promise<T>,
+  name: keyof T
+) {
+  return {
+    lazy: async () => {
+      const mod = await importFn();
+      return { Component: mod[name] };
+    },
+  };
+}
 
 const router = createBrowserRouter([
+
+  // ── Public layout (Navbar, dark, no auth required) ──────────────────────
   {
-    path: "/",
-    element: <Layout />,
+    element: <PublicLayout />,
     children: [
-      { index: true, lazy: () => import("./features/questions/QuestionsPage") },
-      { path: "questions", lazy: () => import("./features/questions/QuestionsPage") },
-      { path: "quiz", lazy: () => import("./features/quiz/QuizPage") },
-      { path: "flashcard", lazy: () => import("./features/flashcard/FlashcardPage") },
-      { path: "system-design", lazy: () => import("./features/system-design/SystemDesignPage") },
-      { path: "progress", lazy: () => import("./features/progress/ProgressPage") },
-      { path: "pricing", lazy: () => import("./features/pricing/PricingPage") },
+      {
+        path: "/",
+        ...lazy(() => import("./features/landing/LandingPage"), "LandingPage"),
+      },
     ],
   },
-  { path: "/login", lazy: () => import("./features/auth/LoginPage") },
-  { path: "/register", lazy: () => import("./features/auth/RegisterPage") },
+
+  // ── App layout (Sidebar — accessible without login) ──────────────────────
+  {
+    element: <Layout />,
+    children: [
+      { path: "questions",      ...lazy(() => import("./features/questions/QuestionsPage"),      "QuestionsPage") },
+      { path: "questions/:id",  ...lazy(() => import("./features/questions/QuestionDetailPage"), "QuestionDetailPage") },
+      { path: "system-design",  ...lazy(() => import("./features/system-design/SystemDesignPage"), "SystemDesignPage") },
+      { path: "pricing",        ...lazy(() => import("./features/pricing/PricingPage"),          "PricingPage") },
+    ],
+  },
+
+  // ── Protected layout (Sidebar + redirect to /login if no token) ──────────
+  {
+    element: <ProtectedLayout />,
+    children: [
+      { path: "dashboard",         ...lazy(() => import("./features/dashboard/DashboardPage"),               "DashboardPage") },
+      { path: "quiz",              ...lazy(() => import("./features/quiz/QuizPage"),                         "QuizPage") },
+      { path: "flashcard",         ...lazy(() => import("./features/flashcard/FlashcardPage"),               "FlashcardPage") },
+      { path: "system-design/:id", ...lazy(() => import("./features/system-design/SystemDesignDetailPage"),  "SystemDesignDetailPage") },
+      { path: "progress",          ...lazy(() => import("./features/progress/ProgressPage"),                 "ProgressPage") },
+    ],
+  },
+
+  // ── Auth pages (no layout) ───────────────────────────────────────────────
+  { path: "/login",    ...lazy(() => import("./features/auth/LoginPage"),    "LoginPage") },
+  { path: "/register", ...lazy(() => import("./features/auth/RegisterPage"), "RegisterPage") },
+
 ]);
 
 export default router;

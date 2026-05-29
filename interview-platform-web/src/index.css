@@ -2,11 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+/* ── Base reset ─────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root { height: 100%; }
+  body {
+    font-family: "Onest", -apple-system, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-canvas text-ink-1;
+  }
+  h1,h2,h3,h4,h5,h6 { font-weight: 600; @apply text-ink-1; line-height: 1.3; }
+  code, pre, kbd { font-family: "JetBrains Mono", monospace; }
+  a { text-decoration: none; color: inherit; }
+  button, input, select, textarea { font-family: "Onest", sans-serif; }
 }
 
-#root {
-  height: 100vh;
+/* ── App shell ──────────────────────────────── */
+.app-layout  { display: flex; height: 100vh; overflow: hidden; }
+.main-area   { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.page-content{ flex: 1; overflow-y: auto; padding: 28px 32px 48px; }
+
+/* ── Flashcard flip ─────────────────────────── */
+.fc-wrap  { perspective: 1200px; }
+.fc-inner {
+  position: relative; width: 100%; height: 340px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
 }
+.fc-inner.flipped { transform: rotateY(180deg); }
+.fc-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  @apply bg-white border border-line rounded-lg shadow-card-md;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px; text-align: center;
+}
+.fc-back { transform: rotateY(180deg); }
+
+/* ── Heatmap cells ──────────────────────────── */
+.hm-cell     { width:11px; height:11px; border-radius:2px; @apply bg-[#EDEDED]; }
+.hm-cell.l1  { @apply bg-[#C8C8C8]; }
+.hm-cell.l2  { @apply bg-[#9A9A9A]; }
+.hm-cell.l3  { @apply bg-[#555555]; }
+.hm-cell.l4  { @apply bg-[#0F0F0F]; }
+
+/* ── Pro gate ───────────────────────────────── */
+.pro-gate        { position: relative; overflow: hidden; @apply rounded; }
+.pro-gate-inner  { filter: blur(3px); pointer-events: none; user-select: none; }
+.pro-gate-overlay{
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.84);
+  backdrop-filter: blur(1px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+}
+
+/* ── Scrollbar ──────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #DCDCDC; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #BCBCBC; }

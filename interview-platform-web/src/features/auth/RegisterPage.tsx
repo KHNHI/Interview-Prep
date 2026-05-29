@@ -6,51 +6,104 @@ import { useAuthStore } from "../../stores/authStore";
 import { Link, useNavigate } from "react-router-dom";
 
 const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
+  name:     z.string().min(2, "At least 2 characters"),
+  email:    z.string().email("Enter a valid email"),
+  password: z.string().min(6, "At least 6 characters"),
 });
 type FormData = z.infer<typeof schema>;
 
-export function Component() {
+const FEATURES = [
+  { icon: "◇", label: "10,000+ curated questions across topics" },
+  { icon: "◈", label: "SM-2 spaced repetition for flashcards"   },
+  { icon: "◉", label: "AI-powered mock interview feedback"       },
+  { icon: "◎", label: "Track readiness with skill radar charts"  },
+];
+
+export function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setAuth  = useAuthStore(s => s.setAuth);
   const navigate = useNavigate();
 
   const onSubmit = async (data: FormData) => {
-    const res = await authApi.register(data.email, data.name, data.password);
-    setAuth(res.data.data.accessToken, res.data.data.userId);
-    localStorage.setItem("access_token", res.data.data.accessToken);
-    navigate("/questions");
+    try {
+      const res = await authApi.register(data.email, data.name, data.password);
+      setAuth(res.data.data.accessToken, res.data.data.userId);
+      localStorage.setItem("access_token", res.data.data.accessToken);
+      navigate("/dashboard");
+    } catch {
+      alert("Registration failed");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-8 rounded-xl shadow-sm w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-        <div>
-          <input {...register("name")} placeholder="Full name"
-            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+    <div className="min-h-screen flex font-sans">
+      {/* Left dark panel */}
+      <div className="w-[400px] bg-sidebar flex flex-col flex-shrink-0 px-10 py-12">
+        <div className="mb-auto">
+          <div className="text-[14px] font-bold text-white tracking-tight">InterviewPrep</div>
+          <div className="text-[10.5px] text-white/30 mt-0.5">Engineering Mastery</div>
         </div>
-        <div>
-          <input {...register("email")} placeholder="Email" type="email"
-            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+        <div className="flex flex-col gap-4">
+          {FEATURES.map(f => (
+            <div key={f.label} className="flex items-start gap-3">
+              <span className="text-white/40 text-[14px] mt-0.5 flex-shrink-0">{f.icon}</span>
+              <span className="text-[13px] text-white/65 leading-snug">{f.label}</span>
+            </div>
+          ))}
         </div>
-        <div>
-          <input {...register("password")} placeholder="Password" type="password"
-            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex-1 flex items-center justify-center bg-canvas px-6 py-10">
+        <div className="w-full max-w-[360px]">
+          <div className="mb-7">
+            <h1 className="text-[22px] font-bold tracking-tight text-ink-1">Create your account</h1>
+            <p className="text-[13.5px] text-ink-3 mt-1">Free forever. No credit card required.</p>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
+            <div>
+              <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Full name</label>
+              <input {...register("name")} placeholder="Nguyen Van A"
+                className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
+              {errors.name && <p className="text-[11.5px] text-ink-3 mt-1">{errors.name.message}</p>}
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Email</label>
+              <input {...register("email")} type="email" placeholder="you@example.com"
+                className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
+              {errors.email && <p className="text-[11.5px] text-ink-3 mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Password</label>
+              <input {...register("password")} type="password" placeholder="At least 6 characters"
+                className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
+              {errors.password && <p className="text-[11.5px] text-ink-3 mt-1">{errors.password.message}</p>}
+            </div>
+
+            <button type="submit" disabled={isSubmitting}
+              className="w-full py-2.5 mt-1 rounded-sm text-[13px] font-medium bg-ink-1 text-white hover:bg-[#2A2A2A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              {isSubmitting ? "Creating account..." : "Create free account"}
+            </button>
+          </form>
+
+          <p className="text-center text-[13px] text-ink-3 mt-5">
+            Already have an account?{" "}
+            <Link to="/login" className="text-ink-1 font-medium underline underline-offset-[3px]">Sign in</Link>
+          </p>
+
+          <div className="mt-8 pt-5 border-t border-line">
+            <p className="text-[11.5px] text-ink-3 text-center leading-relaxed">
+              By creating an account you agree to our{" "}
+              <span className="underline underline-offset-[2px] cursor-pointer">Terms of Service</span>
+              {" "}and{" "}
+              <span className="underline underline-offset-[2px] cursor-pointer">Privacy Policy</span>.
+            </p>
+          </div>
         </div>
-        <button type="submit" disabled={isSubmitting}
-          className="w-full bg-indigo-600 text-white py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
-          {isSubmitting ? "Creating..." : "Create account"}
-        </button>
-        <p className="text-sm text-center text-gray-500">
-          Already have an account? <Link to="/login" className="text-indigo-600 hover:underline">Sign in</Link>
-        </p>
-      </form>
+      </div>
     </div>
   );
 }
