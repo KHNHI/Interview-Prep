@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# Node
+node_modules/
+dist/
+.env.local
+interview-platform-web/.env.production
+
+# Misc
+.DS_Store
+*.log
