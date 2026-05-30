@@ -85,14 +85,35 @@ namespace InterviewPlatform.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CodeSnippet")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContextEn")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CorrectOptionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ExplanationEn")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ExplanationVi")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsPro")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("OptionsEn")
                         .IsRequired()
@@ -101,8 +122,18 @@ namespace InterviewPlatform.Infrastructure.Migrations
                     b.Property<string>("OptionsVi")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("QuestionId")
+                    b.Property<int?>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("QuestionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TitleVi")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -367,9 +398,7 @@ namespace InterviewPlatform.Infrastructure.Migrations
                 {
                     b.HasOne("InterviewPlatform.Domain.Entities.Question", "Question")
                         .WithOne("QuizQuestion")
-                        .HasForeignKey("InterviewPlatform.Domain.Entities.QuizQuestion", "QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("InterviewPlatform.Domain.Entities.QuizQuestion", "QuestionId");
 
                     b.Navigation("Question");
                 });

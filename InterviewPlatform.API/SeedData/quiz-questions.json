@@ -1,0 +1,522 @@
+[
+  {
+    "category": "DSA", "difficulty": "Easy",
+    "titleEn": "What is the time complexity of binary search on a sorted array?",
+    "options": [
+      { "id": "a", "label": "O(1)",       "desc": "Constant — doesn't depend on input size." },
+      { "id": "b", "label": "O(log n)",   "desc": "Each step halves the remaining search space." },
+      { "id": "c", "label": "O(n)",       "desc": "Linear — must visit every element." },
+      { "id": "d", "label": "O(n log n)", "desc": "Typical for efficient comparison-based sorts." }
+    ],
+    "correct": "b",
+    "explanationEn": "Binary search repeatedly halves the search space. At each step half the remaining elements are eliminated, giving O(log n) comparisons in the worst case.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Easy",
+    "titleEn": "Which data structure follows the LIFO (Last In, First Out) principle?",
+    "options": [
+      { "id": "a", "label": "Queue",          "desc": "FIFO — the oldest element is removed first." },
+      { "id": "b", "label": "Stack",          "desc": "LIFO — the most recently added element is removed first." },
+      { "id": "c", "label": "Linked List",    "desc": "Linear structure with no inherent ordering constraint." },
+      { "id": "d", "label": "Priority Queue", "desc": "Elements are dequeued by priority, not insertion order." }
+    ],
+    "correct": "b",
+    "explanationEn": "A stack follows LIFO: push adds to the top, pop removes from the top. Real-world uses include function call stacks, undo history, and DFS traversal.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Easy",
+    "titleEn": "Which of the following sorting algorithms is NOT stable?",
+    "options": [
+      { "id": "a", "label": "Merge Sort",     "desc": "Stable — equal elements retain their relative order." },
+      { "id": "b", "label": "Insertion Sort", "desc": "Stable — only moves elements past strictly larger ones." },
+      { "id": "c", "label": "Quick Sort",     "desc": "Unstable in its standard partition implementation." },
+      { "id": "d", "label": "Bubble Sort",    "desc": "Stable — only swaps adjacent elements when strictly out of order." }
+    ],
+    "correct": "c",
+    "explanationEn": "Standard Quick Sort is unstable because its partition step can swap equal elements, changing their relative order. Merge Sort, Insertion Sort, and Bubble Sort are all stable.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Medium",
+    "titleEn": "What is the space complexity of Merge Sort?",
+    "options": [
+      { "id": "a", "label": "O(1)",      "desc": "Constant — sorts in place with no extra memory." },
+      { "id": "b", "label": "O(log n)",  "desc": "Only the recursion stack, no auxiliary arrays." },
+      { "id": "c", "label": "O(n)",      "desc": "Requires an auxiliary array of size n to merge." },
+      { "id": "d", "label": "O(n²)",     "desc": "Quadratic — typical of naive nested-loop algorithms." }
+    ],
+    "correct": "c",
+    "explanationEn": "Merge Sort needs an auxiliary array of size n to hold the two halves being merged. The recursion stack adds O(log n) but the dominant term is O(n).",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Medium",
+    "titleEn": "Which combination of data structures best implements an LRU cache with O(1) get and put?",
+    "options": [
+      { "id": "a", "label": "Array + Binary Search",         "desc": "O(log n) lookup, O(n) insertion — too slow." },
+      { "id": "b", "label": "Hash Map + Doubly Linked List", "desc": "O(1) lookup via map, O(1) move-to-front via DLL pointers." },
+      { "id": "c", "label": "Min-Heap",                      "desc": "O(log n) for eviction — doesn't support O(1) key lookup." },
+      { "id": "d", "label": "Binary Search Tree",            "desc": "O(log n) operations — not fast enough." }
+    ],
+    "correct": "b",
+    "explanationEn": "A HashMap provides O(1) key lookup pointing to DLL nodes. The DLL maintains access order; moving a node to the front or evicting the tail are both O(1) with direct node pointers.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Medium",
+    "titleEn": "In a max-heap, where is the minimum element guaranteed to be?",
+    "options": [
+      { "id": "a", "label": "The root (index 0)",            "desc": "The root always holds the maximum, not the minimum." },
+      { "id": "b", "label": "The last index of the array",   "desc": "The last element is a leaf, but the min can be any leaf." },
+      { "id": "c", "label": "One of the leaf nodes",         "desc": "The minimum must be a leaf — no child can be smaller than it." },
+      { "id": "d", "label": "At depth 1 (children of root)", "desc": "The minimum could be deeper in the tree." }
+    ],
+    "correct": "c",
+    "explanationEn": "In a max-heap, every parent is ≥ its children. The minimum element has no value smaller than it, so it cannot be a parent — it must be one of the n/2 leaf nodes.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Hard",
+    "titleEn": "What is the time complexity of Dijkstra's algorithm when using a binary min-heap?",
+    "options": [
+      { "id": "a", "label": "O(V²)",       "desc": "Time complexity with an adjacency matrix and no heap." },
+      { "id": "b", "label": "O(E log V)",  "desc": "Each edge may trigger a heap decrease-key costing O(log V)." },
+      { "id": "c", "label": "O(V log V)",  "desc": "Ignores the cost of processing all edges." },
+      { "id": "d", "label": "O(V + E)",    "desc": "Linear — only achievable with a Fibonacci heap variant." }
+    ],
+    "correct": "b",
+    "explanationEn": "With a binary heap, each of the E edges may cause a decrease-key in O(log V), and each of the V vertices is extracted once in O(log V). Total: O((V + E) log V) ≈ O(E log V) for connected graphs.",
+    "isPro": false
+  },
+  {
+    "category": "DSA", "difficulty": "Hard",
+    "titleEn": "Dynamic programming is best applied to problems with which two properties?",
+    "options": [
+      { "id": "a", "label": "Unique subproblems + greedy choice",             "desc": "Greedy applies when local optimal leads to global optimal — not DP." },
+      { "id": "b", "label": "Overlapping subproblems + optimal substructure", "desc": "DP reuses repeated subproblem solutions to build the optimal answer." },
+      { "id": "c", "label": "Sorted input + divide-and-conquer",              "desc": "Describes algorithms like merge sort, not DP." },
+      { "id": "d", "label": "Constant subproblems + polynomial time",         "desc": "Too vague — doesn't define when DP applies." }
+    ],
+    "correct": "b",
+    "explanationEn": "DP requires overlapping subproblems (same subproblems recur, so memoization saves work) and optimal substructure (the optimal solution can be built from optimal sub-solutions). Examples: Fibonacci, shortest paths, knapsack.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Easy",
+    "titleEn": "What does HTTP status code 404 indicate?",
+    "options": [
+      { "id": "a", "label": "Internal Server Error", "desc": "That's 500 — a server-side failure." },
+      { "id": "b", "label": "Resource Not Found",    "desc": "The server cannot find the requested resource." },
+      { "id": "c", "label": "Unauthorized",          "desc": "That's 401 — authentication is required." },
+      { "id": "d", "label": "Bad Gateway",           "desc": "That's 502 — upstream server gave an invalid response." }
+    ],
+    "correct": "b",
+    "explanationEn": "404 Not Found means the server understood the request but cannot find the resource. It's a client-side error — the URL is wrong or the resource was removed.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Easy",
+    "titleEn": "Which transport protocol is connectionless and does not guarantee delivery?",
+    "options": [
+      { "id": "a", "label": "TCP",     "desc": "Connection-oriented with a three-way handshake and guaranteed delivery." },
+      { "id": "b", "label": "UDP",     "desc": "Sends datagrams with no connection, no acknowledgment, no ordering." },
+      { "id": "c", "label": "HTTP/1.1","desc": "An application-layer protocol that runs over TCP." },
+      { "id": "d", "label": "FTP",     "desc": "A file transfer protocol that also runs over TCP." }
+    ],
+    "correct": "b",
+    "explanationEn": "UDP is connectionless — it sends datagrams without establishing a connection, tracking sequence, or acknowledging receipt. Lower overhead makes it ideal for DNS, video streaming, and gaming.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Easy",
+    "titleEn": "What is the purpose of a subnet mask?",
+    "options": [
+      { "id": "a", "label": "Encrypts traffic on a local network",                "desc": "Encryption is handled by TLS/SSL, not subnet masks." },
+      { "id": "b", "label": "Assigns IP addresses dynamically to hosts",           "desc": "That is the role of DHCP." },
+      { "id": "c", "label": "Divides an IP address into network and host portions", "desc": "The mask marks which bits are the network ID vs host ID." },
+      { "id": "d", "label": "Routes packets between different networks",            "desc": "Routing is performed by routers, not subnet masks." }
+    ],
+    "correct": "c",
+    "explanationEn": "A subnet mask (e.g., 255.255.255.0 or /24) tells devices which part of an IP address identifies the network and which part identifies the host. Bits set to 1 = network; 0 = host.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Medium",
+    "titleEn": "Which HTTP method is idempotent but NOT safe?",
+    "options": [
+      { "id": "a", "label": "GET",    "desc": "Both safe (no side effects) and idempotent." },
+      { "id": "b", "label": "POST",   "desc": "Neither safe nor idempotent — creates a new resource each call." },
+      { "id": "c", "label": "DELETE", "desc": "Idempotent (same result whether called once or many times) but not safe." },
+      { "id": "d", "label": "HEAD",   "desc": "Both safe and idempotent — returns headers only, like GET." }
+    ],
+    "correct": "c",
+    "explanationEn": "DELETE is idempotent — deleting a resource that is already gone gives the same end state. It is not 'safe' because it modifies server state by removing a resource.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Medium",
+    "titleEn": "What does TLS primarily provide?",
+    "options": [
+      { "id": "a", "label": "Faster data transmission via compression",             "desc": "TLS adds overhead; compression is optional and separate." },
+      { "id": "b", "label": "Dynamic IP address assignment",                         "desc": "That's DHCP." },
+      { "id": "c", "label": "Encryption, server authentication, and data integrity", "desc": "TLS uses asymmetric crypto for handshake, symmetric for data, and MACs for integrity." },
+      { "id": "d", "label": "Domain name to IP resolution",                          "desc": "That's DNS." }
+    ],
+    "correct": "c",
+    "explanationEn": "TLS provides encryption (nobody can read the data), authentication (verifies the server via certificates), and integrity (HMAC detects tampering). It does not compress or route traffic.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Medium",
+    "titleEn": "What is the purpose of TCP's three-way handshake?",
+    "options": [
+      { "id": "a", "label": "To encrypt the data stream before transfer",              "desc": "Encryption is TLS's job, not TCP's." },
+      { "id": "b", "label": "To authenticate the client's identity",                   "desc": "TCP has no authentication mechanism." },
+      { "id": "c", "label": "To establish connection and synchronize sequence numbers", "desc": "SYN → SYN-ACK → ACK agrees on ISNs and confirms bidirectional reachability." },
+      { "id": "d", "label": "To compress packets for efficient transmission",           "desc": "Compression is not part of the TCP handshake." }
+    ],
+    "correct": "c",
+    "explanationEn": "The three-way handshake (SYN, SYN-ACK, ACK) establishes a TCP connection by synchronizing Initial Sequence Numbers (ISNs) and confirming that both sides can send and receive.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Hard",
+    "titleEn": "What is the key improvement HTTP/2 makes over HTTP/1.1?",
+    "options": [
+      { "id": "a", "label": "Switches from TCP to UDP for lower latency",           "desc": "HTTP/2 still uses TCP. HTTP/3 (QUIC) uses UDP." },
+      { "id": "b", "label": "Multiplexes multiple requests over a single connection","desc": "Eliminates head-of-line blocking at the HTTP layer by interleaving frames." },
+      { "id": "c", "label": "Removes HTTP headers to reduce overhead",               "desc": "HTTP/2 compresses headers via HPACK — it doesn't remove them." },
+      { "id": "d", "label": "Requires a new TLS certificate format",                "desc": "HTTP/2 works with standard TLS certificates." }
+    ],
+    "correct": "b",
+    "explanationEn": "HTTP/1.1 allows only one outstanding request per connection (head-of-line blocking). HTTP/2 introduces multiplexing — multiple request/response streams share one TCP connection using binary frames.",
+    "isPro": false
+  },
+  {
+    "category": "Networking", "difficulty": "Hard",
+    "titleEn": "What does BGP (Border Gateway Protocol) manage?",
+    "options": [
+      { "id": "a", "label": "Internal routing within a company's LAN",        "desc": "OSPF or EIGRP handle interior routing." },
+      { "id": "b", "label": "Dynamic IP address assignment to end hosts",      "desc": "DHCP handles IP assignment." },
+      { "id": "c", "label": "Routing between autonomous systems on the internet","desc": "BGP is the exterior gateway protocol that glues the internet together." },
+      { "id": "d", "label": "TLS certificate issuance for HTTPS websites",    "desc": "Certificate Authorities and the ACME protocol handle this." }
+    ],
+    "correct": "c",
+    "explanationEn": "BGP is the 'glue of the internet' — it routes traffic between Autonomous Systems (ASes) like ISPs and cloud providers. It is a path-vector protocol that exchanges reachability information and applies routing policies.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Easy",
+    "titleEn": "Which ACID property ensures a transaction either fully completes or has no effect at all?",
+    "options": [
+      { "id": "a", "label": "Atomicity",   "desc": "All-or-nothing — if any operation fails, the entire transaction rolls back." },
+      { "id": "b", "label": "Consistency", "desc": "Data moves from one valid state to another — doesn't address partial failure." },
+      { "id": "c", "label": "Isolation",   "desc": "Concurrent transactions don't interfere with each other." },
+      { "id": "d", "label": "Durability",  "desc": "Committed transactions survive crashes — doesn't govern partial failure." }
+    ],
+    "correct": "a",
+    "explanationEn": "Atomicity means a transaction is treated as a single unit — either all operations succeed and commit, or any failure causes all changes to be rolled back, leaving the database unchanged.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Easy",
+    "titleEn": "What is the primary benefit of adding an index to a database column?",
+    "options": [
+      { "id": "a", "label": "Reduces storage space for the table",                "desc": "Indexes add storage overhead, not reduce it." },
+      { "id": "b", "label": "Speeds up reads by avoiding full table scans",       "desc": "The index lets the DB jump directly to matching rows." },
+      { "id": "c", "label": "Automatically enforces foreign key constraints",      "desc": "Constraints and indexes are separate concepts." },
+      { "id": "d", "label": "Prevents duplicate rows in the table",               "desc": "Only a UNIQUE index prevents duplicates." }
+    ],
+    "correct": "b",
+    "explanationEn": "An index (typically a B-tree) stores column values with pointers to rows. Instead of scanning all rows O(n), the DB searches the index O(log n), dramatically speeding up WHERE, JOIN, and ORDER BY clauses.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Easy",
+    "titleEn": "What is the key difference between DELETE and TRUNCATE?",
+    "options": [
+      { "id": "a", "label": "TRUNCATE removes specific rows; DELETE removes all",                                             "desc": "It's the opposite — DELETE can target rows, TRUNCATE removes all." },
+      { "id": "b", "label": "DELETE is row-level logged and rollbackable; TRUNCATE is a fast DDL operation",                  "desc": "DELETE is DML (logged per row); TRUNCATE is DDL (minimal logging, not rollbackable after commit)." },
+      { "id": "c", "label": "TRUNCATE works only on views",                                                                    "desc": "TRUNCATE works on base tables, not views." },
+      { "id": "d", "label": "DELETE permanently drops the table schema",                                                       "desc": "DROP TABLE drops the schema — DELETE only removes rows." }
+    ],
+    "correct": "b",
+    "explanationEn": "DELETE removes rows one at a time with full transaction log entries — slow but rollbackable. TRUNCATE deallocates data pages directly — much faster for clearing all rows, but cannot be rolled back after commit in most databases.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Medium",
+    "titleEn": "What is a covering index?",
+    "options": [
+      { "id": "a", "label": "An index that spans the entire table",                                             "desc": "This describes indexing all columns — not a standard concept." },
+      { "id": "b", "label": "An index that includes all columns a query needs, avoiding a table row lookup",    "desc": "The query is satisfied entirely from the index — an index-only scan." },
+      { "id": "c", "label": "An index shared across multiple tables via foreign keys",                           "desc": "Indexes belong to individual tables." },
+      { "id": "d", "label": "An index that rebuilds itself automatically after updates",                         "desc": "All indexes update automatically — not specific to covering indexes." }
+    ],
+    "correct": "b",
+    "explanationEn": "A covering index includes all columns referenced by a query (WHERE, SELECT, ORDER BY). The database can satisfy the entire query from the index structure alone — an index-only scan — avoiding expensive heap fetches.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Medium",
+    "titleEn": "Which SQL isolation level prevents both non-repeatable reads AND phantom reads?",
+    "options": [
+      { "id": "a", "label": "Read Uncommitted", "desc": "Allows dirty reads — the weakest isolation level." },
+      { "id": "b", "label": "Read Committed",   "desc": "Prevents dirty reads but allows non-repeatable reads." },
+      { "id": "c", "label": "Repeatable Read",  "desc": "Prevents non-repeatable reads but not phantom reads in most DBs." },
+      { "id": "d", "label": "Serializable",     "desc": "Prevents dirty reads, non-repeatable reads, and phantom reads." }
+    ],
+    "correct": "d",
+    "explanationEn": "Serializable is the strictest isolation level — it prevents all read anomalies including phantom reads (new rows appearing in a repeated range query) via range locks or predicate locks, at the cost of reduced concurrency.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Medium",
+    "titleEn": "What is the N+1 query problem in ORM frameworks?",
+    "options": [
+      { "id": "a", "label": "A query returning N+1 extra rows due to a bad JOIN",                             "desc": "This describes a Cartesian product issue, not N+1." },
+      { "id": "b", "label": "1 query fetches parent records, then N separate queries fetch each child set",   "desc": "Results in N+1 total queries — very inefficient for large N." },
+      { "id": "c", "label": "An index missing on N+1 columns causing slow writes",                            "desc": "An indexing issue — unrelated to N+1." },
+      { "id": "d", "label": "A limit-offset pagination bug that skips N+1 rows",                              "desc": "A pagination bug — unrelated to N+1." }
+    ],
+    "correct": "b",
+    "explanationEn": "N+1 happens when you fetch a list of N records, then for each record issue a separate query for related data. Fix with eager loading (JOINs, include/joinedload) to fetch everything in 1–2 queries.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Hard",
+    "titleEn": "What does MVCC (Multi-Version Concurrency Control) accomplish?",
+    "options": [
+      { "id": "a", "label": "Creates multiple physical copies of every table for redundancy",                    "desc": "That's replication, not MVCC." },
+      { "id": "b", "label": "Allows reads and writes to proceed concurrently by keeping multiple row versions",  "desc": "Readers see a consistent snapshot; writers create new versions without blocking readers." },
+      { "id": "c", "label": "Replicates data across geographic regions automatically",                            "desc": "That's multi-region replication." },
+      { "id": "d", "label": "Versions the database schema to allow rolling migrations",                           "desc": "Schema versioning is a migration strategy, not MVCC." }
+    ],
+    "correct": "b",
+    "explanationEn": "MVCC (used by PostgreSQL, MySQL InnoDB, Oracle) stores multiple versions of each row. Readers see a consistent snapshot as of their transaction start — never blocking writers, never blocked by writers.",
+    "isPro": false
+  },
+  {
+    "category": "DB", "difficulty": "Hard",
+    "titleEn": "When might a query planner ignore an existing index and do a full table scan instead?",
+    "options": [
+      { "id": "a", "label": "When the table has fewer than 1,000 rows",                                        "desc": "Small tables may not justify an index lookup, but it's not a hard rule." },
+      { "id": "b", "label": "When the query uses an ORDER BY clause",                                           "desc": "Indexes can actually speed up ORDER BY — they are not ignored for this reason." },
+      { "id": "c", "label": "When the query would return a high percentage of rows, making a sequential scan cheaper", "desc": "Random I/O via index can be slower than sequential scan when many rows match." },
+      { "id": "d", "label": "When the table has no primary key defined",                                        "desc": "Absence of a primary key doesn't prevent use of other indexes." }
+    ],
+    "correct": "c",
+    "explanationEn": "If a query matches ~10–20%+ of rows, the planner may prefer a sequential scan. Random I/O (jumping to many different heap pages via index) is slower than sequential I/O for large result sets. The exact threshold depends on the storage cost model.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Easy",
+    "titleEn": "What is the primary role of the CPU scheduler in an operating system?",
+    "options": [
+      { "id": "a", "label": "Manage disk I/O operations and buffering",       "desc": "That's the I/O scheduler and disk driver." },
+      { "id": "b", "label": "Decide which process or thread runs on the CPU", "desc": "The scheduler selects the next runnable task and preempts when needed." },
+      { "id": "c", "label": "Allocate virtual memory pages to processes",      "desc": "That's the memory manager and paging system." },
+      { "id": "d", "label": "Route network packets to the correct process",    "desc": "That's handled by the network stack and sockets." }
+    ],
+    "correct": "b",
+    "explanationEn": "The CPU scheduler selects which runnable thread gets CPU time next, and for how long (time quantum). It balances goals like throughput, response time, and fairness using algorithms like Round Robin, CFS, or priority queues.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Easy",
+    "titleEn": "Which of the following is NOT one of the four Coffman conditions required for a deadlock?",
+    "options": [
+      { "id": "a", "label": "Mutual Exclusion",   "desc": "A Coffman condition — at least one resource must be held exclusively." },
+      { "id": "b", "label": "Hold and Wait",      "desc": "A Coffman condition — a process holds resources while waiting for more." },
+      { "id": "c", "label": "Priority Inversion", "desc": "A scheduling anomaly, not a deadlock condition." },
+      { "id": "d", "label": "Circular Wait",      "desc": "A Coffman condition — a cycle of processes each waiting for the next." }
+    ],
+    "correct": "c",
+    "explanationEn": "The four Coffman conditions are: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. Priority inversion is a related but separate scheduling problem.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Easy",
+    "titleEn": "What happens during a context switch between two processes?",
+    "options": [
+      { "id": "a", "label": "The CPU cache is permanently flushed",                        "desc": "TLB may be flushed but L1/L2 cache is not explicitly cleared." },
+      { "id": "b", "label": "The OS saves the current process state and loads the next's", "desc": "Registers, PC, and stack pointer are saved to the PCB and the next process's state is restored." },
+      { "id": "c", "label": "The kernel swaps the entire process from RAM to disk",         "desc": "Swapping is a heavier operation separate from a context switch." },
+      { "id": "d", "label": "All running threads in the current process are terminated",    "desc": "Only the CPU is handed off — the process and its threads continue to exist." }
+    ],
+    "correct": "b",
+    "explanationEn": "A context switch saves the running process's CPU state (registers, program counter, stack pointer) into its Process Control Block (PCB), then loads another process's PCB and resumes it. It is pure overhead — no useful work is done.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Medium",
+    "titleEn": "What does virtual memory enable that physical RAM alone cannot?",
+    "options": [
+      { "id": "a", "label": "Two processes to share the same physical memory address",                    "desc": "Virtual memory actually isolates processes — each has its own address space." },
+      { "id": "b", "label": "Programs to use more memory than physically installed, using disk as overflow","desc": "Pages not in RAM are swapped to disk (swap space) on demand." },
+      { "id": "c", "label": "The CPU to access RAM faster through hardware prefetching",                   "desc": "Prefetching is a CPU cache optimization unrelated to virtual memory." },
+      { "id": "d", "label": "Processes to communicate securely without system calls",                      "desc": "IPC requires system calls; virtual memory doesn't provide this." }
+    ],
+    "correct": "b",
+    "explanationEn": "Virtual memory creates an abstraction where each process has a large address space backed by both RAM and disk. Pages are loaded on demand (demand paging); infrequently used pages are evicted to swap, allowing total usage to exceed physical RAM.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Medium",
+    "titleEn": "What is the key distinction between a mutex and a semaphore?",
+    "options": [
+      { "id": "a", "label": "Mutexes are always faster than semaphores",                               "desc": "Speed depends on implementation — not the defining distinction." },
+      { "id": "b", "label": "A mutex has ownership (only the locker can unlock it); a semaphore does not","desc": "Ownership is the fundamental design difference." },
+      { "id": "c", "label": "Semaphores only work in single-threaded programs",                        "desc": "Semaphores work in multi-threaded and multi-process contexts." },
+      { "id": "d", "label": "Mutexes support multiple concurrent holders; semaphores do not",          "desc": "It's the opposite — a counting semaphore allows N holders." }
+    ],
+    "correct": "b",
+    "explanationEn": "A mutex enforces ownership: only the thread that acquired it can release it. Semaphores are signaling primitives with no owner — any thread can call release(), making them suitable for producer-consumer signaling.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Medium",
+    "titleEn": "Which CPU scheduling algorithm is theoretically optimal for minimizing average waiting time?",
+    "options": [
+      { "id": "a", "label": "FCFS (First Come First Served)", "desc": "Simple but suffers from the convoy effect — long jobs block short ones." },
+      { "id": "b", "label": "Round Robin",                    "desc": "Fair but doesn't minimize average wait — depends on quantum size." },
+      { "id": "c", "label": "SJF (Shortest Job First)",       "desc": "Provably optimal for average waiting time — runs the shortest burst next." },
+      { "id": "d", "label": "Priority Scheduling",            "desc": "Optimizes for priority, not average waiting time." }
+    ],
+    "correct": "c",
+    "explanationEn": "SJF (Shortest Job First) is mathematically optimal for minimizing average waiting time. The catch: it's impractical because future CPU burst times are unknown and must be estimated.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Hard",
+    "titleEn": "What is priority inversion, and what is the standard OS solution?",
+    "options": [
+      { "id": "a", "label": "A high-priority thread blocked by a low-priority thread holding a shared lock; fixed by priority inheritance", "desc": "The OS temporarily boosts the low-priority thread's priority so it finishes faster." },
+      { "id": "b", "label": "The OS demotes high-priority threads when the CPU is idle; fixed by aging",                                    "desc": "Aging raises low-priority threads — unrelated to priority inversion." },
+      { "id": "c", "label": "A deadlock where all involved threads have equal priority",                                                     "desc": "Deadlock is a separate problem from priority inversion." },
+      { "id": "d", "label": "A cache eviction strategy that removes the highest-priority items first",                                      "desc": "A max-priority eviction policy — not an OS scheduling concept." }
+    ],
+    "correct": "a",
+    "explanationEn": "Priority inversion: High-priority H waits for lock held by Low-priority L, while Medium-priority M preempts L — so M runs before H despite H having higher priority. Fix: priority inheritance temporarily raises L's priority to H's level so it completes and releases the lock.",
+    "isPro": false
+  },
+  {
+    "category": "OS", "difficulty": "Hard",
+    "titleEn": "What is the purpose of the TLB (Translation Lookaside Buffer)?",
+    "options": [
+      { "id": "a", "label": "Caches frequently accessed disk blocks in RAM",                                "desc": "That's the page cache / buffer cache." },
+      { "id": "b", "label": "Caches recent virtual-to-physical address translations for fast memory access","desc": "A TLB hit avoids walking the page table — cuts lookup from ~4 memory reads to 1." },
+      { "id": "c", "label": "Manages the CPU's branch prediction pipeline",                                 "desc": "Branch prediction is handled by the CPU's branch predictor, not the TLB." },
+      { "id": "d", "label": "Buffers incoming network packets before the application reads them",            "desc": "Network buffering is handled by the socket receive buffer." }
+    ],
+    "correct": "b",
+    "explanationEn": "Without a TLB, every memory access requires walking the page table (multiple memory reads). The TLB is a small, fast cache of recent VA→PA translations in the MMU. A TLB hit translates an address in ~1 cycle; a miss triggers a full page table walk.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Easy",
+    "titleEn": "What type of storage is Amazon S3?",
+    "options": [
+      { "id": "a", "label": "Block storage — like a raw disk drive",           "desc": "Block storage (EBS) is separate — provides raw volumes for EC2." },
+      { "id": "b", "label": "File storage — like a shared NAS (NFS)",          "desc": "File storage (EFS) is separate — provides a shared POSIX filesystem." },
+      { "id": "c", "label": "Object storage — stores data as objects with keys","desc": "Objects are stored with metadata in buckets, accessed via HTTP API." },
+      { "id": "d", "label": "In-memory storage — data is lost on restart",     "desc": "ElastiCache is in-memory. S3 is persistent with 11 nines durability." }
+    ],
+    "correct": "c",
+    "explanationEn": "S3 is object storage — you store and retrieve files (objects) by key using an HTTP API. Unlike block or file storage, S3 is flat — keys can look like paths but there is no real directory hierarchy.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Easy",
+    "titleEn": "What does horizontal scaling mean?",
+    "options": [
+      { "id": "a", "label": "Upgrading an existing server with more CPU and RAM",          "desc": "That's vertical scaling (scaling up)." },
+      { "id": "b", "label": "Adding more servers and distributing the load across them",   "desc": "Scale out by adding instances; a load balancer distributes traffic." },
+      { "id": "c", "label": "Increasing disk I/O throughput of an existing machine",       "desc": "Storage optimization — still vertical in nature." },
+      { "id": "d", "label": "Splitting a database into columns on separate servers",       "desc": "That's vertical partitioning — not horizontal scaling." }
+    ],
+    "correct": "b",
+    "explanationEn": "Horizontal scaling (scale out) adds more instances behind a load balancer. It requires stateless application design but enables near-unlimited scale and better fault tolerance. Vertical scaling hits hardware ceilings and often requires downtime.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Easy",
+    "titleEn": "What is the main purpose of a CDN (Content Delivery Network)?",
+    "options": [
+      { "id": "a", "label": "Encrypts traffic between client and origin server",                   "desc": "Encryption is TLS's job; CDNs can terminate TLS but that's not their core purpose." },
+      { "id": "b", "label": "Assigns IP addresses to cloud resources globally",                     "desc": "IP assignment is handled by the cloud provider's infrastructure." },
+      { "id": "c", "label": "Caches content at edge locations close to users to reduce latency",    "desc": "Serving from an edge near the user cuts round-trip time and origin load." },
+      { "id": "d", "label": "Provides managed relational database services globally",                "desc": "That's AWS RDS or Aurora." }
+    ],
+    "correct": "c",
+    "explanationEn": "A CDN caches static assets at edge locations worldwide. Instead of every user hitting your origin server in one region, they are served from the nearest edge node — lower latency, lower origin load.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Medium",
+    "titleEn": "The CAP theorem says a distributed system can only guarantee two of three properties. What is the practical implication?",
+    "options": [
+      { "id": "a", "label": "CA systems are common — partition tolerance is optional",             "desc": "Network partitions always occur in practice, making P non-negotiable." },
+      { "id": "b", "label": "The real trade-off is CP vs AP, because partitions always happen",   "desc": "You choose: stay consistent but refuse requests (CP), or stay available with possible staleness (AP)." },
+      { "id": "c", "label": "All three can be achieved simultaneously with eventual consistency",   "desc": "Eventual consistency gives up C, not achieves all three." },
+      { "id": "d", "label": "AP is always the right choice for production workloads",              "desc": "Financial systems, inventory, and leader election require CP." }
+    ],
+    "correct": "b",
+    "explanationEn": "Since network partitions are unavoidable, the real design choice is CP (refuse requests to stay consistent — etcd, ZooKeeper) vs AP (respond with possibly stale data — Cassandra, DynamoDB). The right choice depends on the use case.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Medium",
+    "titleEn": "What is an AWS VPC (Virtual Private Cloud)?",
+    "options": [
+      { "id": "a", "label": "A virtual machine service that runs Docker containers",                    "desc": "That's ECS or EKS for containers." },
+      { "id": "b", "label": "An isolated virtual network where you control IP ranges, subnets, and routing","desc": "VPC gives you your own logical network within AWS." },
+      { "id": "c", "label": "A globally distributed in-memory cache layer for DynamoDB",                "desc": "That's DAX (DynamoDB Accelerator)." },
+      { "id": "d", "label": "A fully managed Kubernetes control plane service",                         "desc": "That's EKS (Elastic Kubernetes Service)." }
+    ],
+    "correct": "b",
+    "explanationEn": "A VPC is your private network within AWS. You define CIDR blocks, create public/private subnets, configure route tables, set up internet gateways, and control traffic via security groups and NACLs.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Medium",
+    "titleEn": "When should you choose an NLB (Network Load Balancer) over an ALB?",
+    "options": [
+      { "id": "a", "label": "When you need path-based HTTP routing (e.g., /api → backend)",         "desc": "ALB handles path-based routing — that's its strength." },
+      { "id": "b", "label": "When you need ultra-low latency TCP/UDP balancing or a static IP per AZ","desc": "NLB operates at Layer 4 with near-zero overhead and supports Elastic IPs." },
+      { "id": "c", "label": "When you want to integrate with AWS WAF",                               "desc": "WAF integrates with ALB, not NLB." },
+      { "id": "d", "label": "When routing WebSocket connections for a web app",                       "desc": "ALB supports WebSockets natively." }
+    ],
+    "correct": "b",
+    "explanationEn": "Use NLB when you need Layer 4 (TCP/UDP) load balancing with extremely high throughput and low latency, a static IP for whitelisting, or TLS passthrough. Use ALB for HTTP/HTTPS with content-based routing or WAF.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Hard",
+    "titleEn": "What does 'eventual consistency' mean in a distributed database?",
+    "options": [
+      { "id": "a", "label": "Every read always returns the most recent write",                               "desc": "That's strong consistency / linearizability." },
+      { "id": "b", "label": "Given enough time without new writes, all replicas converge to the same value", "desc": "Nodes may temporarily serve stale data but will eventually agree." },
+      { "id": "c", "label": "The system guarantees at least one replica returns the latest write",           "desc": "That's a quorum or read-your-writes guarantee, not eventual consistency." },
+      { "id": "d", "label": "Writes are rolled back if they cannot replicate within a timeout",              "desc": "That's synchronous replication — the opposite of eventual consistency." }
+    ],
+    "correct": "b",
+    "explanationEn": "Eventual consistency means that if no new updates are made, all replicas will converge to the same value over time. During the convergence window different replicas may return different values. DynamoDB (default), Cassandra, and DNS all use eventual consistency.",
+    "isPro": false
+  },
+  {
+    "category": "Cloud", "difficulty": "Hard",
+    "titleEn": "What is the purpose of a NAT Gateway in AWS?",
+    "options": [
+      { "id": "a", "label": "Assigns Elastic IPs to instances in a public subnet",                                                "desc": "Elastic IPs are attached directly to ENIs — not NAT Gateway's role." },
+      { "id": "b", "label": "Resolves domain names to IPs within a VPC",                                                          "desc": "DNS resolution is handled by Route 53 Resolver." },
+      { "id": "c", "label": "Allows private subnet instances to initiate outbound internet connections without being reachable inbound","desc": "NAT translates private IPs to the gateway's public IP for outbound traffic only." },
+      { "id": "d", "label": "Encrypts all traffic between two peered VPCs",                                                       "desc": "VPC peering traffic stays on the AWS backbone — app-level TLS handles encryption." }
+    ],
+    "correct": "c",
+    "explanationEn": "A NAT Gateway lives in a public subnet and allows instances in private subnets to reach the internet (for OS updates, API calls) without exposing them to inbound connections. Outbound traffic is translated from the private IP to the NAT Gateway's Elastic IP.",
+    "isPro": false
+  }
+]
