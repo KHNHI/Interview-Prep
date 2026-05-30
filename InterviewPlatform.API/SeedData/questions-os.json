@@ -1,0 +1,82 @@
+[
+  {
+    "category": "OS",
+    "subcategory": "Processes & Threads",
+    "titleEn": "What is the difference between a process and a thread?",
+    "difficulty": "Easy",
+    "tags": ["OS", "Concurrency", "Processes"],
+    "isPro": false,
+    "orderIndex": 1,
+    "contentEn": "## Short Answer\n\nA **process** is an independent program in execution with its own memory space. A **thread** is a lightweight unit of execution that lives *inside* a process and shares its memory.\n\n## Key Differences\n\n| Aspect | Process | Thread |\n|---|---|---|\n| Memory | Own address space | Shared with parent process |\n| Creation cost | High (fork/exec) | Low |\n| Communication | IPC (pipes, sockets) | Shared memory (direct) |\n| Crash impact | Isolated | Can crash entire process |\n| Context switch | Expensive | Cheaper |\n\n## Explanation\n\nWhen you open Chrome, each tab is a **process** — if one tab crashes, others survive. Inside one tab, multiple **threads** handle rendering, JavaScript, and network I/O concurrently. Threads communicate fast (shared heap) but bugs like race conditions or one thread crashing can corrupt the whole process.\n\n```c\n// Forking a process (Unix)\npid_t pid = fork();\nif (pid == 0) {\n    // child process — gets a copy of parent's memory\n    execv(\"/bin/ls\", args);\n} else {\n    // parent continues\n    wait(NULL);\n}\n\n// Creating a thread (POSIX)\npthread_t tid;\npthread_create(&tid, NULL, worker_fn, NULL);\npthread_join(tid, NULL);\n```\n\n## Key Interview Points\n\n- Threads within a process share **heap** and **global variables** but each has its own **stack** and **registers**\n- **Context switching** between processes is slower because the OS must swap page tables; threads share the same address space\n- The OS schedules **threads**, not processes (in most modern OSes)\n- Python's GIL (Global Interpreter Lock) prevents true parallel thread execution in CPython — use `multiprocessing` for CPU-bound tasks\n- Java's `Thread` and Go's `goroutine` are both thread abstractions but goroutines are multiplexed onto OS threads by the runtime"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Memory Management",
+    "titleEn": "What is virtual memory and how does paging work?",
+    "difficulty": "Medium",
+    "tags": ["OS", "Memory", "Paging"],
+    "isPro": false,
+    "orderIndex": 2,
+    "contentEn": "## Short Answer\n\n**Virtual memory** gives each process the illusion of having a large, contiguous address space even when physical RAM is limited. **Paging** implements this by dividing memory into fixed-size blocks (pages) and mapping them to physical frames via a page table.\n\n## How Paging Works\n\n1. Virtual address space is divided into **pages** (typically 4 KB)\n2. Physical RAM is divided into **frames** of the same size\n3. The OS maintains a **page table** per process mapping pages → frames\n4. The CPU's **MMU** (Memory Management Unit) translates virtual → physical addresses on every access\n5. If a page is not in RAM, a **page fault** occurs → OS loads it from disk (swap)\n\n## Address Translation\n\n```\nVirtual Address: [Page Number | Offset]\n                      ↓ (page table lookup)\nPhysical Address: [Frame Number | Offset]\n```\n\nA **TLB** (Translation Lookaside Buffer) caches recent translations — a TLB hit avoids the page table walk entirely, making most accesses near-instant.\n\n## Key Interview Points\n\n- **Page fault** = page not in RAM. The OS loads it from swap/disk and updates the page table. A **major fault** loads from disk; a **minor fault** just updates the mapping\n- **Thrashing** = the system spends more time swapping pages than executing code — happens when the working set exceeds available RAM\n- **Demand paging** = pages are loaded only when first accessed, not eagerly at process start\n- Page size trade-off: larger pages → fewer TLB entries needed but more internal fragmentation\n- **Copy-on-write (COW)**: after `fork()`, parent and child share the same pages until one writes — then a copy is made. This makes `fork()` cheap even for large processes"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Concurrency",
+    "titleEn": "What are deadlocks? How do you prevent and detect them?",
+    "difficulty": "Medium",
+    "tags": ["OS", "Concurrency", "Deadlock"],
+    "isPro": false,
+    "orderIndex": 3,
+    "contentEn": "## Short Answer\n\nA **deadlock** is a situation where two or more threads are each waiting for a resource held by the other, so none can proceed.\n\n## The Four Coffman Conditions\n\nAll four must hold simultaneously for a deadlock to occur:\n\n1. **Mutual exclusion** — at least one resource is held non-shareably\n2. **Hold and wait** — a thread holds one resource while waiting for another\n3. **No preemption** — resources cannot be forcibly taken away\n4. **Circular wait** — T1 waits for T2, T2 waits for T1 (or a longer cycle)\n\n## Classic Example\n\n```python\n# Thread 1           # Thread 2\nlock_A.acquire()     lock_B.acquire()\nlock_B.acquire()     lock_A.acquire()  # deadlock!\n```\n\n## Prevention Strategies\n\n- **Lock ordering**: always acquire locks in the same global order (breaks circular wait)\n- **Trylock with timeout**: if lock B isn't available, release lock A and retry\n- **Single lock**: use one coarse-grained lock (hurts concurrency but eliminates deadlock)\n- **Resource allocation graph** analysis at design time\n\n## Detection & Recovery\n\n- **Detection**: OS checks for cycles in the resource allocation graph periodically\n- **Recovery options**: kill one process in the cycle, or preempt a resource (rollback)\n- **Databases use deadlock detection** and automatically roll back one transaction\n\n## Key Interview Points\n\n- **Livelock** = threads keep changing state in response to each other but make no progress (like two people stepping aside in a hallway in sync)\n- **Starvation** = a thread never gets CPU time because higher-priority threads always preempt it\n- Java's `ReentrantLock.tryLock(timeout)` is the idiomatic deadlock-safe alternative to `synchronized`\n- Golang channels and the `select` statement with `default` are designed to avoid blocking indefinitely"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Scheduling",
+    "titleEn": "Explain common CPU scheduling algorithms.",
+    "difficulty": "Medium",
+    "tags": ["OS", "Scheduling", "CPU"],
+    "isPro": false,
+    "orderIndex": 4,
+    "contentEn": "## Short Answer\n\nThe OS **scheduler** decides which thread/process runs on the CPU next. Different algorithms optimize for different goals (throughput, latency, fairness).\n\n## Common Algorithms\n\n| Algorithm | How It Works | Best For |\n|---|---|---|\n| FCFS | Run in arrival order (non-preemptive) | Simple batch jobs |\n| SJF | Shortest job runs first | Min average wait time |\n| Round Robin | Fixed time quantum, rotate | Interactive systems |\n| Priority | Highest priority runs first | Real-time systems |\n| MLFQ | Multiple queues by priority | General-purpose OSes |\n\n## Round Robin in Detail\n\nEach process gets a **time quantum** (e.g., 10ms). When it expires, the process is preempted and placed at the back of the queue.\n\n- Small quantum → more context switches, better interactivity\n- Large quantum → approaches FCFS, fewer switches\n\nModern Linux uses **CFS** (Completely Fair Scheduler) — tracks \"virtual runtime\" and always runs the thread with the least vruntime.\n\n## Key Interview Points\n\n- **Convoy effect** in FCFS: one long job blocks all short jobs behind it\n- **SJF is optimal** for average waiting time but requires knowing future burst times (impractical without prediction)\n- **Priority inversion**: a high-priority thread waits for a low-priority thread holding a shared lock. Fix: **priority inheritance** (temporarily boost the low-priority thread's priority)\n- **Starvation** in priority scheduling: low-priority tasks never run. Fix: **aging** (gradually increase priority of waiting tasks)\n- Context switch cost includes saving/restoring registers, flushing TLB, updating kernel data structures"
+  },
+  {
+    "category": "OS",
+    "subcategory": "I/O & Filesystems",
+    "titleEn": "What is the difference between blocking, non-blocking, and async I/O?",
+    "difficulty": "Medium",
+    "tags": ["OS", "I/O", "Async"],
+    "isPro": false,
+    "orderIndex": 5,
+    "contentEn": "## Short Answer\n\n- **Blocking I/O**: the thread waits (sleeps) until the I/O completes\n- **Non-blocking I/O**: the call returns immediately with an error if data isn't ready — caller polls\n- **Async I/O**: the call returns immediately; the OS notifies the caller when I/O is done\n\n## Comparison\n\n| Model | Thread blocked? | How caller knows it's done |\n|---|---|---|\n| Blocking | Yes | Call returns |\n| Non-blocking | No | Poll in a loop (`EAGAIN`) |\n| Async (AIO) | No | Callback / signal / completion port |\n| I/O multiplexing | No (select/epoll) | File descriptor becomes readable |\n\n## I/O Multiplexing (`epoll`)\n\nThe key technique for high-concurrency servers:\n\n```c\n// Register many fds, block until at least one is ready\nint epfd = epoll_create1(0);\nepoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);\nint n = epoll_wait(epfd, events, MAX_EVENTS, -1);\n// n fds are ready — process them\n```\n\nNginx, Node.js, and Redis all use **event loops** built on `epoll` (Linux) or `kqueue` (macOS) to handle thousands of connections with a single thread.\n\n## Key Interview Points\n\n- Node.js is **single-threaded** but handles high concurrency via the event loop + async I/O (libuv)\n- Go uses **goroutines** — the runtime parks goroutines during I/O and resumes them when ready, without blocking OS threads\n- `O_NONBLOCK` flag on a socket makes reads/writes non-blocking\n- **`select` vs `epoll`**: `select` is O(n) — scans all fds on each call. `epoll` is O(1) — maintains a kernel-side ready list. Use `epoll` for large fd counts"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Concurrency",
+    "titleEn": "What is a mutex vs a semaphore?",
+    "difficulty": "Easy",
+    "tags": ["OS", "Concurrency", "Synchronization"],
+    "isPro": false,
+    "orderIndex": 6,
+    "contentEn": "## Short Answer\n\nA **mutex** (mutual exclusion lock) is a binary lock — only one thread can hold it at a time. A **semaphore** is a counter that allows up to N threads to access a resource concurrently.\n\n## Comparison\n\n| Feature | Mutex | Semaphore |\n|---|---|---|\n| State | Locked / Unlocked | Integer counter (0..N) |\n| Ownership | Yes — only the locker can unlock | No — any thread can signal |\n| Use case | Exclusive resource access | Limiting concurrency, signaling |\n| Binary semaphore | Same as mutex? | Yes, but no ownership |\n\n## When to Use Each\n\n**Mutex**: protecting a critical section (e.g., a shared list).\n\n```python\nwith lock:           # acquire mutex\n    shared_list.append(item)  # critical section\n# auto-released\n```\n\n**Semaphore**: limiting concurrent access to a bounded resource (e.g., database connection pool of size 10).\n\n```python\npool_sem = Semaphore(10)  # max 10 concurrent DB connections\n\ndef query_db():\n    with pool_sem:   # blocks if 10 connections already in use\n        return db.execute(sql)\n```\n\n**Signaling semaphore**: producer signals consumer (initial count = 0).\n\n```python\nready = Semaphore(0)\n\ndef producer():\n    produce_item()\n    ready.release()   # increment — signals consumer\n\ndef consumer():\n    ready.acquire()   # blocks until producer signals\n    consume_item()\n```\n\n## Key Interview Points\n\n- A mutex has **ownership** — only the thread that locked it can unlock it. A semaphore doesn't — any thread can `release()` it\n- **Priority inversion** is a risk with mutexes. Semaphores don't have priority inheritance built-in\n- `pthread_mutex_t` in C, `std::mutex` in C++, `threading.Lock()` in Python, `sync.Mutex` in Go\n- A **spin lock** is a mutex that busy-waits (spins) instead of sleeping — useful for very short critical sections on multi-core CPUs"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Memory Management",
+    "titleEn": "What is a memory leak and how do you detect one?",
+    "difficulty": "Easy",
+    "tags": ["OS", "Memory", "Debugging"],
+    "isPro": false,
+    "orderIndex": 7,
+    "contentEn": "## Short Answer\n\nA **memory leak** occurs when a program allocates memory but never frees it, causing memory usage to grow unboundedly over time until the process crashes or the system runs out of RAM.\n\n## Why It Happens\n\n- **C/C++**: `malloc`/`new` without matching `free`/`delete`\n- **Managed languages**: holding references to objects that are no longer needed (e.g., event listeners, caches, static collections)\n- **Circular references**: two objects reference each other, preventing garbage collection (in languages without cycle detection)\n\n```javascript\n// JavaScript memory leak example\nconst cache = {};\nfunction processUser(user) {\n  cache[user.id] = user;  // never cleared — grows forever\n}\n```\n\n## Detection Tools\n\n| Language | Tool |\n|---|---|\n| C/C++ | Valgrind (memcheck), AddressSanitizer |\n| Java | VisualVM, YourKit, heap dump analysis |\n| Python | `tracemalloc`, `objgraph` |\n| Go | `pprof` heap profiler |\n| Node.js | `--inspect` + Chrome DevTools heap snapshots |\n| General | Monitor RSS/heap usage over time (`/proc/<pid>/status`) |\n\n## Key Interview Points\n\n- In GC languages (Java, Python, Go), leaks are usually **reference leaks** — the GC can't collect because something still holds a reference\n- Common sources: **event listeners** not removed, **caches** without eviction, **goroutine leaks** (Go), **closures** capturing large objects\n- **Goroutine leak** in Go: a goroutine blocked on a channel that will never receive a value — memory held by the goroutine's stack grows\n- Production strategy: track heap usage in metrics (Prometheus), alert on sustained growth, capture heap dumps for analysis"
+  },
+  {
+    "category": "OS",
+    "subcategory": "Filesystems",
+    "titleEn": "How does the Linux filesystem work? What are inodes?",
+    "difficulty": "Hard",
+    "tags": ["OS", "Filesystem", "Linux"],
+    "isPro": true,
+    "orderIndex": 8,
+    "contentEn": "## Short Answer\n\nLinux filesystems (ext4, XFS, Btrfs) organize data using **inodes** — metadata structures that store file attributes and pointers to data blocks. Filenames are stored in **directory entries** that map names to inode numbers.\n\n## Inode Structure\n\nAn inode contains:\n- File type, permissions (mode), owner (UID/GID)\n- File size, timestamps (atime, mtime, ctime)\n- Link count (number of hard links)\n- Pointers to data blocks (direct, indirect, double-indirect)\n\nAn inode does **not** contain the filename — that lives in the directory.\n\n## Directory Lookup\n\n```\n/home/alice/file.txt\n  ↓\n1. Read inode of /  → find \"home\" entry → inode #42\n2. Read inode #42   → find \"alice\" entry → inode #87\n3. Read inode #87   → find \"file.txt\" entry → inode #1203\n4. Read inode #1203 → get data block pointers → read content\n```\n\n## Hard Links vs Soft Links\n\n- **Hard link**: a directory entry pointing to the same inode. Deleting one doesn't remove the file — the inode is freed only when link count reaches 0\n- **Soft link (symlink)**: a separate inode whose content is a path string. Deleting the target leaves a dangling symlink\n\n```bash\nln   original.txt hard_link.txt    # hard link — same inode\nln -s original.txt soft_link.txt   # symlink — new inode\nstat original.txt | grep Inode\nstat hard_link.txt | grep Inode    # same inode number\n```\n\n## Key Interview Points\n\n- `df -i` shows inode usage. You can run out of inodes before running out of disk space (common on filesystems with millions of small files)\n- `open()` returns a **file descriptor** — an index into the process's file descriptor table. The kernel maps FDs → file table entries → inodes\n- **Page cache**: Linux caches file contents in RAM. `read()` may be served from cache without touching disk (`cat /proc/meminfo | grep Cached`)\n- **fsync()** flushes dirty pages to disk — critical for durability in databases. Without it, data may be lost on crash even after `write()` returns\n- ext4's **journaling** writes a log of pending changes before applying them, enabling recovery after crash"
+  }
+]

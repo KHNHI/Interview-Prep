@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 
+// DataSeeder is registered here so Program.cs can resolve it
+
 namespace InterviewPlatform.Infrastructure;
 
 public static class DependencyInjection
@@ -26,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IAiFeedbackService, AiFeedbackService>();
 
         services.AddHttpClient<AiFeedbackService>();
+        services.AddScoped<DataSeeder>();
 
         return services;
     }

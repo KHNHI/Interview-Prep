@@ -74,6 +74,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// ── Seed database on startup ─────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<InterviewPlatform.Infrastructure.Persistence.DataSeeder>();
+    await seeder.SeedAsync();
+}
+
 app.Run();
 
 public partial class Program { }
