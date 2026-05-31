@@ -90,7 +90,7 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
   - `IsPro`, `OrderIndex`
   - `QuestionId?` — optional FK; null = standalone quiz-only question
 - `UserProgress` — composite key (userId, questionId), status, viewedAt
-- `UserQuizAttempt` — SM-2 fields: easeFactor, intervalDays, repetitions, nextReviewAt
+- `UserQuizAttempt` — SM-2 fields: easeFactor, intervalDays, repetitions, nextReviewAt, attemptedAt
 - `Subscription` — plan, status, stripeSubscriptionId, periodStart/End
 - `SystemDesignCase` — requirements, hints, scoringRubric, solutionDiagramUrl, isPro
 - `SystemDesignAttempt` — solutionText, aiFeedback (JSONB)
@@ -103,12 +103,28 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 
 | Query/Command | Handler | Notes |
 |---|---|---|
-| `GetQuestionsQuery` | `GetQuestionsQueryHandler` | Filtered, paginated, bilingual |
-| `GetQuestionByIdQuery` | `GetQuestionByIdQueryHandler` | Returns `QuestionDetailDto` |
-| `GetQuizQuestionsQuery` | `GetQuizQuestionsQueryHandler` | Random N, filter by category/difficulty, parses `OptionsEn` JSON |
+| `GetQuestionsQuery` | handler | Filtered, paginated, bilingual |
+| `GetQuestionByIdQuery` | handler | Returns `QuestionDetailDto` |
+| `GetQuizQuestionsQuery` | handler | Random N, filter by category/difficulty, parses `OptionsEn` JSON |
+| `SubmitQuizCommand` | handler | Saves `UserQuizAttempt` per answer, computes IsCorrect |
+| `GetDashboardQuery` | handler | Aggregates UserQuizAttempts → stats + heatmap (last 365 days) |
+| `GetRadarQuery` | handler | Groups attempts by QuizQuestion.Category → correct rate per category |
+| `GetFlashcardsQuery` | handler | Returns up to 20 cards due today; deduped by question (most recent attempt); new cards first |
+| `ReviewFlashcardCommand` | handler | Applies SM-2 algorithm to UserQuizAttempt, updates NextReviewAt |
 | `RegisterCommand` | handler | BCrypt hash, return JWT |
 | `LoginCommand` | handler | Verify credentials, return JWT |
 | `ValidationBehaviour<TRequest,TResponse>` | — | FluentValidation pipeline |
+
+### SM-2 Algorithm (ReviewFlashcardCommandHandler)
+```
+if rating < 3:
+  repetitions = 0, intervalDays = 1
+else:
+  intervalDays = repetitions==0 ? 1 : repetitions==1 ? 6 : round(intervalDays * easeFactor)
+  easeFactor = max(1.3, easeFactor + 0.1 - (5-rating) * (0.08 + (5-rating) * 0.02))
+  repetitions++
+nextReviewAt = today + intervalDays
+```
 
 ### Infrastructure Services
 - `TokenService` — JWT HS256 with configurable expiry
@@ -130,44 +146,43 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 
 **Total seeded**: 42 Q&A questions + 40 MCQ quiz questions
 
-> Quiz questions are MCQ-only — they are NOT linked to Q&A questions. `QuestionId` is null for all seed quiz questions.
+> Quiz questions are MCQ-only — NOT linked to Q&A questions. `QuestionId` is null for all seed quiz questions.
 
 ### API Controllers
 
-| Controller | Endpoints |
-|---|---|
-| `AuthController` | `POST /api/auth/register`, `POST /api/auth/login` |
-| `QuestionsController` | `GET /api/questions?category&difficulty&lang&page&pageSize` |
-| `QuestionsController` | `GET /api/questions/{id}?lang` |
-| `QuizController` | `GET /api/quiz/questions?category&difficulty&count` (max 50, default 15) |
+| Controller | Endpoints | Auth |
+|---|---|---|
+| `AuthController` | `POST /api/auth/register`, `POST /api/auth/login` | Public |
+| `QuestionsController` | `GET /api/questions?category&difficulty&lang&page&pageSize` | Public |
+| `QuestionsController` | `GET /api/questions/{id}?lang` | Public |
+| `QuizController` | `GET /api/quiz/questions?category&difficulty&count` | Public |
+| `QuizController` | `POST /api/quiz/submit` | `[Authorize]` |
+| `ProgressController` | `GET /api/progress/dashboard` | `[Authorize]` |
+| `ProgressController` | `GET /api/progress/radar` | `[Authorize]` |
+| `FlashcardsController` | `GET /api/flashcards` | `[Authorize]` |
+| `FlashcardsController` | `POST /api/flashcards/{id}/review` | `[Authorize]` |
 
-### API Response Shapes
+### Key API Response Shapes
 
 ```json
-// GET /api/questions
-{ "success": true, "data": [QuestionDto], "meta": { "page", "pageSize", "total" } }
+// GET /api/progress/dashboard
+{ "success": true, "data": {
+  "questionsAttempted": 42, "quizzesTaken": 5, "correctRate": 0.73,
+  "currentStreak": 3, "heatmap": [{ "date": "2026-05-31", "count": 4 }]
+}}
 
-// GET /api/questions/:id
-{ "success": true, "data": QuestionDetailDto }
+// GET /api/progress/radar
+{ "success": true, "data": [{ "category": "DSA", "score": 0.8 }, ...] }
 
-// GET /api/quiz/questions
-{ "success": true, "data": [QuizQuestionDto] }
-```
+// GET /api/flashcards
+{ "success": true, "data": [{
+  "id": "uuid", "category": "DSA", "difficulty": "Medium",
+  "front": "...", "back": "...",
+  "easeFactor": 2.5, "intervalDays": 1, "repetitions": 0, "nextReviewAt": null
+}]}
 
-`QuizQuestionDto` shape:
-```json
-{
-  "id": "uuid",
-  "category": "DSA",
-  "difficulty": "Medium",
-  "titleEn": "...",
-  "contextEn": null,
-  "codeSnippet": null,
-  "options": [{ "id": "a", "label": "...", "desc": "..." }, ...],
-  "correctOptionId": "b",
-  "explanationEn": "...",
-  "isPro": false
-}
+// POST /api/flashcards/{id}/review  body: { "rating": 4 }
+{ "success": true, "data": { "intervalDays": 6, "nextReviewAt": "2026-06-06" }}
 ```
 
 ### Database — Connection Details (local dev)
@@ -197,7 +212,7 @@ Host=localhost;Port=5433;Database=interview_platform;Username=dev_user;Password=
 | Vite 5 | Build tool (dev on :5173) |
 | React Router 6 | Routing with lazy loading |
 | TanStack Query 5 | Server state, caching |
-| Zustand 4 + persist | Auth state (localStorage) |
+| Zustand 4 + persist | Auth state (localStorage key: `"auth-store"`) |
 | Tailwind CSS 3 | Styling (semantic tokens configured) |
 | React Hook Form + Zod | Forms + validation |
 | Axios | HTTP client with JWT interceptor |
@@ -244,57 +259,56 @@ borderRadius: { sm: '5px', DEFAULT: '8px', lg: '12px' }
 ```
 src/
 ├── api/
-│   ├── client.ts              ← Axios instance (baseURL = VITE_API_URL + "/api")
+│   ├── client.ts              ← Axios instance; reads token from localStorage["access_token"]
 │   ├── auth.api.ts            ← register(), login()
 │   ├── questions.api.ts       ← getAll(params), getById(id, lang)
-│   └── quiz.api.ts            ← getQuestions(params) → QuizQuestionDto[]
+│   ├── quiz.api.ts            ← getQuestions(params), submit() (uses fetch, not Axios)
+│   ├── progress.api.ts        ← getDashboard(), getRadar()
+│   └── flashcards.api.ts      ← getCards(), reviewCard(id, rating)
 ├── components/
 │   ├── layout/
-│   │   ├── Layout.tsx         ← Sidebar + Header + Outlet (app pages)
-│   │   ├── ProtectedLayout.tsx← Layout + auth redirect to /login
+│   │   ├── Layout.tsx         ← Sidebar + Header + Outlet; owns collapsed state
+│   │   ├── ProtectedLayout.tsx← Layout + auth redirect to /login if no token
 │   │   ├── PublicLayout.tsx   ← Navbar + Outlet (landing, pricing)
 │   │   ├── Navbar.tsx         ← Dark top bar for public pages
-│   │   ├── Sidebar.tsx        ← Dark sidebar, NavLink active states
+│   │   ├── Sidebar.tsx        ← Collapsible (56px/228px); lock icons for guest on protected routes
 │   │   └── Header.tsx         ← White top bar inside app
 │   └── ui/                    ← (empty dir, add shared components here)
 ├── features/
-│   ├── landing/LandingPage.tsx          ← Public homepage
-│   ├── auth/LoginPage.tsx               ← Split dark/light layout, connected to API
-│   ├── auth/RegisterPage.tsx            ← Split dark/light layout, connected to API
-│   ├── dashboard/DashboardPage.tsx      ← Stats, heatmap, quick actions (hardcoded)
-│   ├── questions/QuestionsPage.tsx      ← Q&A list — connected to GET /api/questions
-│   ├── questions/QuestionDetailPage.tsx ← Full answer — connected to GET /api/questions/:id
-│   ├── quiz/QuizPage.tsx                ← 3-screen quiz (Setup → Quiz → Results), connected to API
-│   ├── flashcard/FlashcardPage.tsx      ← SM-2 flip cards (hardcoded)
-│   ├── system-design/SystemDesignPage.tsx     ← SD case list (hardcoded)
-│   ├── system-design/SystemDesignDetailPage.tsx ← 2-col + tabs + pro gate (hardcoded)
-│   ├── progress/ProgressPage.tsx        ← Recharts radar + activity (hardcoded)
-│   └── pricing/PricingPage.tsx          ← 3-tier comparison + FAQ
-├── hooks/                     ← (empty, add useRequireAuth here if needed)
-├── stores/authStore.ts        ← Zustand + persist (accessToken, userId, planTier)
-├── utils/cn.ts                ← clsx-style class merger
-├── router.tsx                 ← Route groups (see below)
-└── main.tsx                   ← QueryClient + RouterProvider
+│   ├── landing/LandingPage.tsx
+│   ├── auth/LoginPage.tsx               ← Sets localStorage["access_token"] on login
+│   ├── auth/RegisterPage.tsx
+│   ├── dashboard/DashboardPage.tsx      ← Connected to GET /api/progress/dashboard
+│   ├── questions/QuestionsPage.tsx      ← Connected to GET /api/questions
+│   ├── questions/QuestionDetailPage.tsx ← Connected to GET /api/questions/:id
+│   ├── quiz/QuizPage.tsx                ← Public; 3-screen flow; guest quota (3 free); SM-2 submit
+│   ├── flashcard/FlashcardPage.tsx      ← Connected to GET /api/flashcards + POST review
+│   ├── system-design/SystemDesignPage.tsx     ← Hardcoded
+│   ├── system-design/SystemDesignDetailPage.tsx ← Hardcoded
+│   ├── progress/ProgressPage.tsx        ← Connected to GET /api/progress/radar
+│   └── pricing/PricingPage.tsx
+├── stores/authStore.ts        ← Zustand + persist; key "auth-store"; fields: accessToken, userId, planTier
+├── utils/cn.ts
+├── router.tsx
+└── main.tsx
 ```
 
 ### Router Groups (`router.tsx`)
 ```
 PublicLayout    →  /
-Layout          →  /questions, /questions/:id, /system-design, /pricing
-ProtectedLayout →  /dashboard, /quiz, /flashcard, /system-design/:id, /progress
+Layout          →  /questions, /questions/:id, /quiz, /system-design, /pricing
+ProtectedLayout →  /dashboard, /flashcard, /system-design/:id, /progress
 (no layout)     →  /login, /register
 ```
 
-### Named Export Convention
-Every page exports a named function matching the filename:
-```ts
-export function DashboardPage() { ... }
+> **Important**: `/quiz` is in the public `Layout` (NOT ProtectedLayout) — guests can take quizzes with a 3-attempt limit.
 
-// router.tsx uses the lazy() helper:
-function lazy(importFn, name) {
-  return { lazy: async () => ({ Component: (await importFn())[name] }) }
-}
-```
+### Auth Token Storage
+- Login page sets **two** keys on successful login:
+  - `localStorage["access_token"]` — read by Axios request interceptor
+  - Zustand store via `setAuth()` — persisted automatically to `localStorage["auth-store"]`
+- On 401: Axios interceptor removes both keys and does `window.location.href = "/login"`
+- `quiz.api.ts submit()` uses raw `fetch` (not Axios) to avoid 401 bouncing user off results page
 
 ---
 
@@ -303,28 +317,43 @@ function lazy(importFn, name) {
 ### Connected to API ✅
 | Page | API Endpoint | Notes |
 |---|---|---|
-| `QuestionsPage` | `GET /api/questions` | Filters: category, difficulty; pagination; client-side search |
-| `QuestionDetailPage` | `GET /api/questions/:id` | Markdown renderer built-in |
-| `LoginPage` | `POST /api/auth/login` | Stores JWT in Zustand + localStorage |
-| `RegisterPage` | `POST /api/auth/register` | Stores JWT in Zustand + localStorage |
-| `QuizPage` | `GET /api/quiz/questions` | Called on "Start Quiz"; not TanStack Query — plain async fetch |
+| `QuestionsPage` | `GET /api/questions` | Filters, pagination, client-side search |
+| `QuestionDetailPage` | `GET /api/questions/:id` | Markdown renderer |
+| `LoginPage` | `POST /api/auth/login` | Sets JWT in Zustand + localStorage |
+| `RegisterPage` | `POST /api/auth/register` | Sets JWT in Zustand + localStorage |
+| `QuizPage` | `GET /api/quiz/questions` | Plain async fetch (not TanStack Query) |
+| `QuizPage` (ResultsScreen) | `POST /api/quiz/submit` | Fire-and-forget via fetch; skipped for guests |
+| `DashboardPage` | `GET /api/progress/dashboard` | TanStack Query; skeleton loading |
+| `ProgressPage` | `GET /api/progress/radar` | TanStack Query; empty state if no data |
+| `FlashcardPage` | `GET /api/flashcards` | Plain useEffect fetch; SM-2 queue |
+| `FlashcardPage` | `POST /api/flashcards/{id}/review` | Called on each rating; moves to next card |
 
 ### Still hardcoded (needs backend endpoint)
 | Page | Needs | Planned API |
 |---|---|---|
-| `FlashcardPage` | Cards array | `GET /api/flashcards` |
 | `SystemDesignPage` | Cases list | `GET /api/system-design` |
 | `SystemDesignDetailPage` | Case detail | `GET /api/system-design/:id` |
-| `DashboardPage` | Stats + heatmap | `GET /api/progress/dashboard` |
-| `ProgressPage` | Radar + activity | `GET /api/progress/radar` |
+| `DashboardPage` | "Continue Learning" card | Future endpoint |
+
+### QuizPage — Guest Quota
+- Guests can take up to **3 free quizzes** (tracked in `localStorage["guestQuizCount"]`)
+- After 3rd quiz, `ResultsScreen` replaces action buttons with "Create free account / Sign in" CTA
+- `SetupScreen` shows a lock gate if count ≥ 3
+- `SetupScreen` shows "X free quizzes remaining" hint for guests with quota left
 
 ### QuizPage — 3-screen flow
 ```
 SetupScreen → QuizScreen → ResultsScreen
 ```
-- **SetupScreen**: choose Difficulty (Mixed/Easy/Medium/Hard), Topic (All/DSA/Networking/DB/OS/Cloud), Length (10/15/20/25 questions with 1 min/question timer)
-- **QuizScreen**: select answer → Next, no explanations shown mid-quiz; dot progress indicator; auto-submits when timer reaches 0
-- **ResultsScreen**: score card (X/Y, %, grade, time used) + per-question breakdown with correct answer, user's answer, and explanation
+- **SetupScreen**: Difficulty (Mixed/Easy/Medium/Hard), Topic (All/DSA/Networking/DB/OS/Cloud), Length (10/15/20/25 Q)
+- **QuizScreen**: select answer → Next; dot progress; timer; auto-submits at 0
+- **ResultsScreen**: score card + per-question breakdown with explanations; fires submit to API if authenticated
+
+### Sidebar Behaviour
+- **Collapsed** (56px): icons only, centered; toggle chevron at top; tooltips on hover
+- **Expanded** (228px): icons + labels; brand name visible
+- State persisted in `localStorage["sidebar-collapsed"]`
+- **Guest UX**: Dashboard, Flashcards, Analytics show at reduced opacity with a tiny lock badge; click still navigates (ProtectedLayout handles the redirect)
 
 ---
 
@@ -390,105 +419,88 @@ docker compose exec postgres psql -U dev_user -d interview_platform -c "\dt"
 
 ## 11. Git State
 
-### Commits
+### Recent Commits
 ```
 b2dd174  add quizz feature
 160cf46  fix the quizz page and seed data for quizz
 bc2b37a  Connect Q&A to API, add seed data, add GetQuestionById endpoint
 2056ab1  Redesign frontend and use tailwind, add public pages
 bff9f81  Fix CORS, port config, add migrations and project summary
-fb893b8  Initial project scaffold — Clean Architecture .NET 8 + React 18 + TypeScript
 ```
 
 ### Pending (not yet committed)
-Submit quiz feature (Step C):
-- `SubmitQuizCommand` + handler — saves `UserQuizAttempt` per answer
-- `QuizController` — `POST /api/quiz/submit` (requires `[Authorize]`)
-- `quiz.api.ts` — added `submit()` + `SubmitAnswerItem` / `SubmitQuizResponse` types
-- `QuizPage.tsx` — `ResultsScreen` fires `quizApi.submit()` on mount if authenticated (silent fail for guests)
+All work since `b2dd174` is uncommitted:
+
+**Quiz submit + guest quota:**
+- `SubmitQuizCommand` + handler + `QuizController POST /api/quiz/submit`
+- `QuizPage.tsx` — guest 3-attempt quota, ResultsScreen fires submit via fetch
+- `router.tsx` — `/quiz` moved to public Layout
+
+**Dashboard + Progress (Step B):**
+- `GetDashboardQuery` + handler → `ProgressController GET /api/progress/dashboard`
+- `GetRadarQuery` + handler → `ProgressController GET /api/progress/radar`
+- `progress.api.ts`, `DashboardPage.tsx`, `ProgressPage.tsx` — all connected to API
+
+**Flashcard feature (Step A):**
+- `GetFlashcardsQuery` + handler → `FlashcardsController GET /api/flashcards`
+- `ReviewFlashcardCommand` + handler (SM-2) → `FlashcardsController POST /api/flashcards/{id}/review`
+- `flashcards.api.ts`, `FlashcardPage.tsx` — fully connected, 3-screen flow (loading/reviewing/done)
+
+**Sidebar improvements:**
+- `Layout.tsx` — owns `collapsed` state (persisted to localStorage)
+- `Sidebar.tsx` — collapsible (56px/228px), guest lock icons on protected routes
+
+**Auth / client fixes:**
+- `client.ts` — on 401: clears both `"access_token"` + `"auth-store"`, redirects to `/login`
+- `quiz.api.ts submit()` — uses raw `fetch` to bypass Axios interceptor (prevents mid-quiz token expiry from bouncing user off results)
 
 ---
 
 ## 12. What's Next — Roadmap
 
-### ⚡ NEXT SESSION — Do these in order (B → A)
+### ⚡ NEXT SESSION
 
-> Step 0 (commit quiz) and Step C (POST /api/quiz/submit) are DONE.
+Phase 1 core features are complete. Remaining work:
 
-#### Step B — Dashboard + Progress with real data *(do after C)*
-Replace hardcoded mock data in `DashboardPage` and `ProgressPage` with live API data.
+#### System Design endpoints + frontend
+Connect the still-hardcoded System Design pages:
+- `GET /api/system-design` → list of cases
+- `GET /api/system-design/:id` → case detail
 
-**Backend — new endpoints needed:**
-- `GET /api/progress/dashboard` → returns:
-  ```json
-  {
-    "questionsViewed": 42,
-    "quizzesTaken": 7,
-    "correctRate": 0.73,
-    "currentStreak": 3,
-    "heatmap": [{ "date": "2026-05-30", "count": 4 }, ...]
-  }
-  ```
-  Queries: count `UserQuizAttempt` by userId, group by date for heatmap
-- `GET /api/progress/radar` → returns per-category scores:
-  ```json
-  [{ "category": "DSA", "score": 0.8 }, { "category": "Networking", "score": 0.6 }, ...]
-  ```
-  Queries: group `UserQuizAttempt` by question category, compute correct rate
+#### Stripe checkout
+Wire the Pricing page CTAs to actual Stripe checkout:
+- `StripeService` exists in Infrastructure but not wired to an endpoint
+- Need `POST /api/subscriptions/checkout` → creates Stripe checkout session
+- Frontend: pricing page "Upgrade" buttons → redirect to Stripe hosted checkout
+- Webhook handler for `checkout.session.completed`
 
-**Frontend:**
-- `DashboardPage.tsx` — replace `STATS` + `HEATMAP_DATA` with `useQuery` → `GET /api/progress/dashboard`
-- `ProgressPage.tsx` — replace `RADAR_DATA` with `useQuery` → `GET /api/progress/radar`
-- Add `progress.api.ts`
+#### Deploy to AWS
+- EC2 + RDS (PostgreSQL) + S3 + CloudFront
+- Docker-based deployment
+- Health check endpoint `/health` for ALB (currently missing)
 
-#### Step A — Flashcard feature *(do after B)*
-Full end-to-end flashcard feature with SM-2 spaced repetition.
-
-**Backend:**
-- New entity `Flashcard` (or reuse `Question` with a flashcard view) — or use `UserQuizAttempt.NextReviewAt` for SM-2 queue
-- `GET /api/flashcards?lang=en` — returns cards due for review today (ordered by `NextReviewAt`)
-- `POST /api/flashcards/:id/review` — accepts `{ rating: 0|1|2|3|4|5 }`, applies SM-2 algorithm, updates `NextReviewAt`
-
-**SM-2 algorithm** (already partially implemented in `UserQuizAttempt`):
-```
-if rating < 3: reset repetitions=0, interval=1
-else:
-  if repetitions=0: interval=1
-  elif repetitions=1: interval=6
-  else: interval = round(interval * easeFactor)
-  easeFactor = max(1.3, easeFactor + 0.1 - (5-rating)*(0.08 + (5-rating)*0.02))
-  repetitions += 1
-nextReviewAt = today + interval days
-```
-
-**Frontend:**
-- `FlashcardPage.tsx` — replace hardcoded `CARDS` with `useQuery` → `GET /api/flashcards`
-- Flip animation already built (`.fc-*` CSS classes)
-- Rating buttons: Again (0) / Hard (3) / Good (4) / Easy (5)
-- Add `flashcards.api.ts`
+#### CI/CD pipeline
+- GitHub Actions: `ci.yml` (build + test) + `deploy.yml` (push to EC2)
 
 ---
 
-### Phase 1 (mostly complete)
-- [x] Seed database with real questions — 42 Q&A + 40 MCQ quiz questions
-- [x] Connect QuestionsPage to `GET /api/questions`
-- [x] Connect QuestionDetailPage to `GET /api/questions/:id`
-- [x] Add `GET /api/questions/:id` endpoint
-- [x] Quiz page — 3-screen flow (Setup/Quiz/Results), difficulty/topic/length selection, timer, explanations only on results
-- [x] Connect QuizPage to `GET /api/quiz/questions`
-- [x] **`POST /api/quiz/submit`** — done; saves UserQuizAttempt per question, fires from ResultsScreen if authenticated
-- [ ] Stripe checkout integration (backend StripeService exists, frontend pricing CTA not wired) — do last
-- [ ] Deploy to AWS (EC2 + RDS + S3 + CloudFront)
-- [ ] CI/CD pipeline (GitHub Actions — ci.yml + deploy.yml)
+### Phase 1 — Status
+- [x] Seed DB — 42 Q&A + 40 MCQ quiz questions
+- [x] Q&A list + detail pages connected to API
+- [x] Quiz — 3-screen flow, filters, timer, results
+- [x] Quiz submit → saves UserQuizAttempt (SM-2 seed data for flashcards)
+- [x] Guest quiz quota (3 free attempts, localStorage)
+- [x] Dashboard connected to real data (stats + heatmap)
+- [x] Analytics/Progress connected to real data (radar chart)
+- [x] Flashcard feature — SM-2 review queue, flip animation, rating buttons
+- [x] Sidebar — collapsible, guest lock indicators
+- [ ] System Design endpoints + connect frontend
+- [ ] Stripe checkout
+- [ ] Deploy to AWS
+- [ ] CI/CD pipeline
 
 ### Phase 2
-- [ ] **Dashboard + Progress with real data** — see Step B above
-- [ ] **Flashcard endpoints + SM-2 + connect frontend** — see Step A above
-- [ ] System Design endpoints + connect frontend
-- [ ] `POST /api/quiz/submit` saves SM-2 fields properly (after Step A)
-
-### Phase 3
-- [ ] AI feedback (AiFeedbackService exists, not wired to endpoint)
+- [ ] AI feedback endpoint (AiFeedbackService exists, not wired)
 - [ ] Mock interview mode (timed, phased)
 - [ ] Team plan management
 - [ ] Google OAuth
@@ -497,10 +509,11 @@ nextReviewAt = today + interval days
 - Delete `Class1.cs` placeholder files in Domain/Application/Infrastructure
 - Add health check endpoint `/health` for ALB
 - Add rate limiting on auth endpoints (brute force protection)
-- Store refresh tokens in DB (currently not persisted)
+- Store refresh tokens in DB (currently not persisted — 60 min JWT only)
 - Replace JWT secret with AWS Secrets Manager in production
 - Write actual unit tests (stubs exist, no tests written)
 - Add error boundaries in React
+- `DashboardPage` "Continue Learning" card is hardcoded
 
 ---
 

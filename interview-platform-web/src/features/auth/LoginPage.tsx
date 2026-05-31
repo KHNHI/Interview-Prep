@@ -12,7 +12,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function LoginPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
   const setAuth  = useAuthStore(s => s.setAuth);
   const navigate = useNavigate();
 
@@ -23,7 +23,7 @@ export function LoginPage() {
       localStorage.setItem("access_token", res.data.data.accessToken);
       navigate("/dashboard");
     } catch {
-      alert("Invalid credentials");
+      setError("password", { message: "Invalid email or password" });
     }
   };
 

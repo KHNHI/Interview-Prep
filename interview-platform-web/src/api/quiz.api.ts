@@ -45,6 +45,18 @@ export const quizApi = {
   getQuestions: (params: GetQuizQuestionsParams = {}) =>
     client.get<QuizQuestionsResponse>("/quiz/questions", { params }),
 
-  submit: (answers: SubmitAnswerItem[]) =>
-    client.post<SubmitQuizResponse>("/quiz/submit", { answers }),
+  // Uses fetch directly so a 401 (expired token mid-quiz) doesn't trigger the
+  // shared Axios interceptor and bounce the user off the results page.
+  submit: (answers: SubmitAnswerItem[]): Promise<void> => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return Promise.resolve();
+    return fetch(
+      (import.meta.env.VITE_API_URL ?? "") + "/api/quiz/submit",
+      {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ answers }),
+      }
+    ).then(() => undefined);
+  },
 };

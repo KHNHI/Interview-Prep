@@ -38,6 +38,10 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
     {
+        // Keep the original JWT claim names (e.g. "sub") instead of remapping
+        // them to the legacy XML URIs. Controllers read JwtRegisteredClaimNames.Sub
+        // directly, so without this the user id lookup returns null → 401.
+        opts.MapInboundClaims = false;
         opts.TokenValidationParameters = new()
         {
             ValidateIssuer = true,

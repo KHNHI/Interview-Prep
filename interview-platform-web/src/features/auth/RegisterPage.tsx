@@ -20,7 +20,7 @@ const FEATURES = [
 ];
 
 export function RegisterPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
   const setAuth  = useAuthStore(s => s.setAuth);
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export function RegisterPage() {
       localStorage.setItem("access_token", res.data.data.accessToken);
       navigate("/dashboard");
     } catch {
-      alert("Registration failed");
+      setError("email", { message: "Registration failed. Email may already be in use." });
     }
   };
 
