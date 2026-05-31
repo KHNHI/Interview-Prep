@@ -69,40 +69,106 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 ```
 
 ### Key Files
-- `InterviewPlatform.API/Program.cs` — DI registration, middleware pipeline
+- `InterviewPlatform.API/Program.cs` — DI registration, middleware pipeline, seed call on startup
 - `InterviewPlatform.API/appsettings.Development.json` — local secrets (git-ignored)
 - `InterviewPlatform.Infrastructure/DependencyInjection.cs` — service registrations
 - `InterviewPlatform.Infrastructure/Persistence/ApplicationDbContext.cs` — EF DbContext
+- `InterviewPlatform.Infrastructure/Persistence/DataSeeder.cs` — seeds Q&A + quiz questions on startup
 
 ---
 
 ## 4. Backend — What's Built
 
 ### Domain Entities
+
 - `User` — email, passwordHash, planTier (Free/Pro/Team), locale (en/vi), stripeCustomerId
 - `Question` — category, titleEn/Vi, contentEn/Vi, difficulty, tags[], isPro, orderIndex
-- `QuizQuestion` — optionsEn/Vi (JSONB), explanationEn/Vi
+- `QuizQuestion` — **standalone MCQ question** (nullable QuestionId link to Q&A bank):
+  - `Category`, `Difficulty`, `TitleEn`, `TitleVi`, `ContextEn`, `CodeSnippet`
+  - `OptionsEn` (JSON string: `[{id,label,desc}]`), `OptionsVi`
+  - `CorrectOptionId` ("a"|"b"|"c"|"d"), `ExplanationEn`, `ExplanationVi`
+  - `IsPro`, `OrderIndex`
+  - `QuestionId?` — optional FK; null = standalone quiz-only question
 - `UserProgress` — composite key (userId, questionId), status, viewedAt
 - `UserQuizAttempt` — SM-2 fields: easeFactor, intervalDays, repetitions, nextReviewAt
 - `Subscription` — plan, status, stripeSubscriptionId, periodStart/End
 - `SystemDesignCase` — requirements, hints, scoringRubric, solutionDiagramUrl, isPro
 - `SystemDesignAttempt` — solutionText, aiFeedback (JSONB)
 
+### EF Migrations
+- `20260529102836_Init` — initial schema
+- `StandaloneQuizQuestion` — makes QuizQuestion standalone (nullable FK + new fields)
+
 ### Application Layer — Implemented CQRS
-- `GetQuestionsQuery` + `GetQuestionsQueryHandler` — filtered, paginated, bilingual
-- `RegisterCommand` + handler — BCrypt hash, return JWT
-- `LoginCommand` + handler — verify credentials, return JWT
-- `ValidationBehaviour<TRequest, TResponse>` — FluentValidation pipeline
+
+| Query/Command | Handler | Notes |
+|---|---|---|
+| `GetQuestionsQuery` | `GetQuestionsQueryHandler` | Filtered, paginated, bilingual |
+| `GetQuestionByIdQuery` | `GetQuestionByIdQueryHandler` | Returns `QuestionDetailDto` |
+| `GetQuizQuestionsQuery` | `GetQuizQuestionsQueryHandler` | Random N, filter by category/difficulty, parses `OptionsEn` JSON |
+| `RegisterCommand` | handler | BCrypt hash, return JWT |
+| `LoginCommand` | handler | Verify credentials, return JWT |
+| `ValidationBehaviour<TRequest,TResponse>` | — | FluentValidation pipeline |
 
 ### Infrastructure Services
 - `TokenService` — JWT HS256 with configurable expiry
 - `CacheService` — Redis get/set/increment/expire wrapper
 - `QuotaService` — daily limit per feature per user (Vietnam UTC+7 reset)
 - `AiFeedbackService` — Anthropic Claude API (claude-sonnet-4-6)
+- `DataSeeder` — seeds on startup; skips if data already exists; reads JSON from `SeedData/`
+
+### Seed Data (`InterviewPlatform.API/SeedData/`)
+
+| File | Table | Count |
+|---|---|---|
+| `questions-dsa.json` | Questions | 10 |
+| `questions-networking.json` | Questions | 8 |
+| `questions-database.json` | Questions | 8 |
+| `questions-os.json` | Questions | 8 |
+| `questions-cloud.json` | Questions | 8 |
+| `quiz-questions.json` | QuizQuestions | 40 (8 per category: DSA/Networking/DB/OS/Cloud) |
+
+**Total seeded**: 42 Q&A questions + 40 MCQ quiz questions
+
+> Quiz questions are MCQ-only — they are NOT linked to Q&A questions. `QuestionId` is null for all seed quiz questions.
 
 ### API Controllers
-- `AuthController` — POST /api/auth/register, POST /api/auth/login
-- `QuestionsController` — GET /api/questions (category, difficulty, lang, page, pageSize)
+
+| Controller | Endpoints |
+|---|---|
+| `AuthController` | `POST /api/auth/register`, `POST /api/auth/login` |
+| `QuestionsController` | `GET /api/questions?category&difficulty&lang&page&pageSize` |
+| `QuestionsController` | `GET /api/questions/{id}?lang` |
+| `QuizController` | `GET /api/quiz/questions?category&difficulty&count` (max 50, default 15) |
+
+### API Response Shapes
+
+```json
+// GET /api/questions
+{ "success": true, "data": [QuestionDto], "meta": { "page", "pageSize", "total" } }
+
+// GET /api/questions/:id
+{ "success": true, "data": QuestionDetailDto }
+
+// GET /api/quiz/questions
+{ "success": true, "data": [QuizQuestionDto] }
+```
+
+`QuizQuestionDto` shape:
+```json
+{
+  "id": "uuid",
+  "category": "DSA",
+  "difficulty": "Medium",
+  "titleEn": "...",
+  "contextEn": null,
+  "codeSnippet": null,
+  "options": [{ "id": "a", "label": "...", "desc": "..." }, ...],
+  "correctOptionId": "b",
+  "explanationEn": "...",
+  "isPro": false
+}
+```
 
 ### Database — Connection Details (local dev)
 ```
@@ -178,9 +244,10 @@ borderRadius: { sm: '5px', DEFAULT: '8px', lg: '12px' }
 ```
 src/
 ├── api/
-│   ├── client.ts              ← Axios instance (base URL from VITE_API_URL)
+│   ├── client.ts              ← Axios instance (baseURL = VITE_API_URL + "/api")
 │   ├── auth.api.ts            ← register(), login()
-│   └── questions.api.ts       ← getAll()
+│   ├── questions.api.ts       ← getAll(params), getById(id, lang)
+│   └── quiz.api.ts            ← getQuestions(params) → QuizQuestionDto[]
 ├── components/
 │   ├── layout/
 │   │   ├── Layout.tsx         ← Sidebar + Header + Outlet (app pages)
@@ -191,18 +258,18 @@ src/
 │   │   └── Header.tsx         ← White top bar inside app
 │   └── ui/                    ← (empty dir, add shared components here)
 ├── features/
-│   ├── landing/LandingPage.tsx       ← Public homepage
-│   ├── auth/LoginPage.tsx            ← Split dark/light layout
-│   ├── auth/RegisterPage.tsx         ← Split dark/light layout
-│   ├── dashboard/DashboardPage.tsx   ← Stats, heatmap, quick actions
-│   ├── questions/QuestionsPage.tsx   ← Q&A list with filters
-│   ├── questions/QuestionDetailPage.tsx ← Full answer + related
-│   ├── quiz/QuizPage.tsx             ← Active quiz session
-│   ├── flashcard/FlashcardPage.tsx   ← SM-2 flip cards
-│   ├── system-design/SystemDesignPage.tsx     ← SD case list
-│   ├── system-design/SystemDesignDetailPage.tsx ← 2-col + tabs + pro gate
-│   ├── progress/ProgressPage.tsx     ← Recharts radar + activity
-│   └── pricing/PricingPage.tsx       ← 3-tier comparison + FAQ
+│   ├── landing/LandingPage.tsx          ← Public homepage
+│   ├── auth/LoginPage.tsx               ← Split dark/light layout, connected to API
+│   ├── auth/RegisterPage.tsx            ← Split dark/light layout, connected to API
+│   ├── dashboard/DashboardPage.tsx      ← Stats, heatmap, quick actions (hardcoded)
+│   ├── questions/QuestionsPage.tsx      ← Q&A list — connected to GET /api/questions
+│   ├── questions/QuestionDetailPage.tsx ← Full answer — connected to GET /api/questions/:id
+│   ├── quiz/QuizPage.tsx                ← 3-screen quiz (Setup → Quiz → Results), connected to API
+│   ├── flashcard/FlashcardPage.tsx      ← SM-2 flip cards (hardcoded)
+│   ├── system-design/SystemDesignPage.tsx     ← SD case list (hardcoded)
+│   ├── system-design/SystemDesignDetailPage.tsx ← 2-col + tabs + pro gate (hardcoded)
+│   ├── progress/ProgressPage.tsx        ← Recharts radar + activity (hardcoded)
+│   └── pricing/PricingPage.tsx          ← 3-tier comparison + FAQ
 ├── hooks/                     ← (empty, add useRequireAuth here if needed)
 ├── stores/authStore.ts        ← Zustand + persist (accessToken, userId, planTier)
 ├── utils/cn.ts                ← clsx-style class merger
@@ -212,19 +279,18 @@ src/
 
 ### Router Groups (`router.tsx`)
 ```
-PublicLayout  →  /
-Layout        →  /questions, /questions/:id, /system-design, /pricing
-ProtectedLayout → /dashboard, /quiz, /flashcard, /system-design/:id, /progress
-(no layout)   →  /login, /register
+PublicLayout    →  /
+Layout          →  /questions, /questions/:id, /system-design, /pricing
+ProtectedLayout →  /dashboard, /quiz, /flashcard, /system-design/:id, /progress
+(no layout)     →  /login, /register
 ```
 
 ### Named Export Convention
 Every page exports a named function matching the filename:
 ```ts
-// DashboardPage.tsx
 export function DashboardPage() { ... }
 
-// router.tsx uses the lazy() helper to map named → Component:
+// router.tsx uses the lazy() helper:
 function lazy(importFn, name) {
   return { lazy: async () => ({ Component: (await importFn())[name] }) }
 }
@@ -234,27 +300,31 @@ function lazy(importFn, name) {
 
 ## 8. Frontend — Data State
 
-**All page data is currently hardcoded** — mock arrays at the top of each file.
-
-### Connection plan (per page)
-| Page | Needs | API endpoint |
+### Connected to API ✅
+| Page | API Endpoint | Notes |
 |---|---|---|
-| QuestionsPage | Replace `QUESTIONS` array | `GET /api/questions` |
-| QuestionDetailPage | Replace `QUESTION` object | `GET /api/questions/:id` |
-| QuizPage | Replace `QUESTIONS` array | `GET /api/quiz/session` + `POST /api/quiz/submit` |
-| FlashcardPage | Replace `CARDS` array | `GET /api/flashcards` (not built yet) |
-| SystemDesignPage | Replace `CASES` array | `GET /api/system-design` (not built yet) |
-| SystemDesignDetailPage | Replace `CASE` object | `GET /api/system-design/:id` |
-| DashboardPage | Replace `STATS` + heatmap | `GET /api/progress/dashboard` |
-| ProgressPage | Replace `RADAR_DATA` etc. | `GET /api/progress/radar` |
+| `QuestionsPage` | `GET /api/questions` | Filters: category, difficulty; pagination; client-side search |
+| `QuestionDetailPage` | `GET /api/questions/:id` | Markdown renderer built-in |
+| `LoginPage` | `POST /api/auth/login` | Stores JWT in Zustand + localStorage |
+| `RegisterPage` | `POST /api/auth/register` | Stores JWT in Zustand + localStorage |
+| `QuizPage` | `GET /api/quiz/questions` | Called on "Start Quiz"; not TanStack Query — plain async fetch |
 
-Pattern to use for each:
-```ts
-const { data, isLoading } = useQuery({
-  queryKey: ["questions", category, difficulty],
-  queryFn: () => questionsApi.getAll({ category, difficulty }),
-});
+### Still hardcoded (needs backend endpoint)
+| Page | Needs | Planned API |
+|---|---|---|
+| `FlashcardPage` | Cards array | `GET /api/flashcards` |
+| `SystemDesignPage` | Cases list | `GET /api/system-design` |
+| `SystemDesignDetailPage` | Case detail | `GET /api/system-design/:id` |
+| `DashboardPage` | Stats + heatmap | `GET /api/progress/dashboard` |
+| `ProgressPage` | Radar + activity | `GET /api/progress/radar` |
+
+### QuizPage — 3-screen flow
 ```
+SetupScreen → QuizScreen → ResultsScreen
+```
+- **SetupScreen**: choose Difficulty (Mixed/Easy/Medium/Hard), Topic (All/DSA/Networking/DB/OS/Cloud), Length (10/15/20/25 questions with 1 min/question timer)
+- **QuizScreen**: select answer → Next, no explanations shown mid-quiz; dot progress indicator; auto-submits when timer reaches 0
+- **ResultsScreen**: score card (X/Y, %, grade, time used) + per-question breakdown with correct answer, user's answer, and explanation
 
 ---
 
@@ -290,14 +360,16 @@ VITE_STRIPE_PUBLIC_KEY=pk_test_...
 cd D:\InterviewPrep
 docker compose up postgres redis -d
 
-# 2. Run DB migrations (first time only)
+# 2. Run DB migrations (after any entity change)
 cd InterviewPlatform.API
-$env:ASPNETCORE_ENVIRONMENT="Development"
+dotnet ef migrations add <MigrationName> `
+  --project ..\InterviewPlatform.Infrastructure\InterviewPlatform.Infrastructure.csproj `
+  --startup-project InterviewPlatform.API.csproj
 dotnet ef database update `
   --project ..\InterviewPlatform.Infrastructure\InterviewPlatform.Infrastructure.csproj `
   --startup-project InterviewPlatform.API.csproj
 
-# 3. Start API (terminal 1)
+# 3. Start API (terminal 1) — DataSeeder runs automatically on startup
 dotnet watch run --launch-profile http
 # → http://localhost:5000/swagger
 
@@ -306,6 +378,8 @@ cd D:\InterviewPrep\interview-platform-web
 npm run dev
 # → http://localhost:5173
 ```
+
+> **Seeding note**: `DataSeeder` runs on every startup but skips if data already exists (`AnyAsync()` check). To re-seed, truncate the `Questions` and `QuizQuestions` tables first.
 
 ### Verify DB connection
 ```powershell
@@ -316,33 +390,46 @@ docker compose exec postgres psql -U dev_user -d interview_platform -c "\dt"
 
 ## 11. Git State
 
-### Commits so far
+### Commits
 ```
-(pending) Connect Q&A to API, add seed data, add GetQuestionById endpoint
+bc2b37a  Connect Q&A to API, add seed data, add GetQuestionById endpoint
 2056ab1  Redesign frontend and use tailwind, add public pages
 bff9f81  Fix CORS, port config, add migrations and project summary
 fb893b8  Initial project scaffold — Clean Architecture .NET 8 + React 18 + TypeScript
 ```
 
+### Pending (not yet committed)
+Quiz feature work:
+- `QuizQuestion` entity made standalone (nullable FK + new fields)
+- Migration `StandaloneQuizQuestion`
+- `quiz-questions.json` seed (40 MCQ questions)
+- `DataSeeder` updated to seed QuizQuestions
+- `GetQuizQuestionsQuery` + handler + DTO
+- `QuizController` — `GET /api/quiz/questions`
+- `quiz.api.ts` frontend API client
+- `QuizPage.tsx` fully rewritten — Setup/Quiz/Results screens, API-connected
+
 ---
 
 ## 12. What's Next — Roadmap
 
-### Immediate (Phase 1 completion)
-- [x] Seed database with real questions — 42 questions across DSA/Networking/DB/OS/Cloud via DataSeeder + JSON files
+### Phase 1 (mostly complete)
+- [x] Seed database with real questions — 42 Q&A + 40 MCQ quiz questions
 - [x] Connect QuestionsPage to `GET /api/questions`
 - [x] Connect QuestionDetailPage to `GET /api/questions/:id`
 - [x] Add `GET /api/questions/:id` endpoint
+- [x] Quiz page — 3-screen flow (Setup/Quiz/Results), difficulty/topic/length selection, timer, explanations only on results
+- [x] Connect QuizPage to `GET /api/quiz/questions`
 - [ ] Stripe checkout integration (backend StripeService exists, frontend pricing CTA not wired)
 - [ ] Deploy to AWS (EC2 + RDS + S3 + CloudFront)
 - [ ] CI/CD pipeline (GitHub Actions — ci.yml + deploy.yml)
 
 ### Phase 2
 - [ ] Flashcard endpoints + connect frontend
-- [ ] Quiz endpoints (session, submit, review queue)
 - [ ] System Design endpoints + connect frontend
 - [ ] Progress/dashboard endpoints + connect frontend
 - [ ] Spaced repetition (SM-2) logic in QuizService
+- [ ] `POST /api/quiz/submit` — save UserQuizAttempt per question
 
 ### Phase 3
 - [ ] AI feedback (AiFeedbackService exists, not wired to endpoint)
