@@ -392,6 +392,8 @@ docker compose exec postgres psql -U dev_user -d interview_platform -c "\dt"
 
 ### Commits
 ```
+b2dd174  add quizz feature
+160cf46  fix the quizz page and seed data for quizz
 bc2b37a  Connect Q&A to API, add seed data, add GetQuestionById endpoint
 2056ab1  Redesign frontend and use tailwind, add public pages
 bff9f81  Fix CORS, port config, add migrations and project summary
@@ -399,19 +401,73 @@ fb893b8  Initial project scaffold — Clean Architecture .NET 8 + React 18 + Typ
 ```
 
 ### Pending (not yet committed)
-Quiz feature work:
-- `QuizQuestion` entity made standalone (nullable FK + new fields)
-- Migration `StandaloneQuizQuestion`
-- `quiz-questions.json` seed (40 MCQ questions)
-- `DataSeeder` updated to seed QuizQuestions
-- `GetQuizQuestionsQuery` + handler + DTO
-- `QuizController` — `GET /api/quiz/questions`
-- `quiz.api.ts` frontend API client
-- `QuizPage.tsx` fully rewritten — Setup/Quiz/Results screens, API-connected
+Submit quiz feature (Step C):
+- `SubmitQuizCommand` + handler — saves `UserQuizAttempt` per answer
+- `QuizController` — `POST /api/quiz/submit` (requires `[Authorize]`)
+- `quiz.api.ts` — added `submit()` + `SubmitAnswerItem` / `SubmitQuizResponse` types
+- `QuizPage.tsx` — `ResultsScreen` fires `quizApi.submit()` on mount if authenticated (silent fail for guests)
 
 ---
 
 ## 12. What's Next — Roadmap
+
+### ⚡ NEXT SESSION — Do these in order (B → A)
+
+> Step 0 (commit quiz) and Step C (POST /api/quiz/submit) are DONE.
+
+#### Step B — Dashboard + Progress with real data *(do after C)*
+Replace hardcoded mock data in `DashboardPage` and `ProgressPage` with live API data.
+
+**Backend — new endpoints needed:**
+- `GET /api/progress/dashboard` → returns:
+  ```json
+  {
+    "questionsViewed": 42,
+    "quizzesTaken": 7,
+    "correctRate": 0.73,
+    "currentStreak": 3,
+    "heatmap": [{ "date": "2026-05-30", "count": 4 }, ...]
+  }
+  ```
+  Queries: count `UserQuizAttempt` by userId, group by date for heatmap
+- `GET /api/progress/radar` → returns per-category scores:
+  ```json
+  [{ "category": "DSA", "score": 0.8 }, { "category": "Networking", "score": 0.6 }, ...]
+  ```
+  Queries: group `UserQuizAttempt` by question category, compute correct rate
+
+**Frontend:**
+- `DashboardPage.tsx` — replace `STATS` + `HEATMAP_DATA` with `useQuery` → `GET /api/progress/dashboard`
+- `ProgressPage.tsx` — replace `RADAR_DATA` with `useQuery` → `GET /api/progress/radar`
+- Add `progress.api.ts`
+
+#### Step A — Flashcard feature *(do after B)*
+Full end-to-end flashcard feature with SM-2 spaced repetition.
+
+**Backend:**
+- New entity `Flashcard` (or reuse `Question` with a flashcard view) — or use `UserQuizAttempt.NextReviewAt` for SM-2 queue
+- `GET /api/flashcards?lang=en` — returns cards due for review today (ordered by `NextReviewAt`)
+- `POST /api/flashcards/:id/review` — accepts `{ rating: 0|1|2|3|4|5 }`, applies SM-2 algorithm, updates `NextReviewAt`
+
+**SM-2 algorithm** (already partially implemented in `UserQuizAttempt`):
+```
+if rating < 3: reset repetitions=0, interval=1
+else:
+  if repetitions=0: interval=1
+  elif repetitions=1: interval=6
+  else: interval = round(interval * easeFactor)
+  easeFactor = max(1.3, easeFactor + 0.1 - (5-rating)*(0.08 + (5-rating)*0.02))
+  repetitions += 1
+nextReviewAt = today + interval days
+```
+
+**Frontend:**
+- `FlashcardPage.tsx` — replace hardcoded `CARDS` with `useQuery` → `GET /api/flashcards`
+- Flip animation already built (`.fc-*` CSS classes)
+- Rating buttons: Again (0) / Hard (3) / Good (4) / Easy (5)
+- Add `flashcards.api.ts`
+
+---
 
 ### Phase 1 (mostly complete)
 - [x] Seed database with real questions — 42 Q&A + 40 MCQ quiz questions
@@ -420,16 +476,16 @@ Quiz feature work:
 - [x] Add `GET /api/questions/:id` endpoint
 - [x] Quiz page — 3-screen flow (Setup/Quiz/Results), difficulty/topic/length selection, timer, explanations only on results
 - [x] Connect QuizPage to `GET /api/quiz/questions`
-- [ ] Stripe checkout integration (backend StripeService exists, frontend pricing CTA not wired)
+- [x] **`POST /api/quiz/submit`** — done; saves UserQuizAttempt per question, fires from ResultsScreen if authenticated
+- [ ] Stripe checkout integration (backend StripeService exists, frontend pricing CTA not wired) — do last
 - [ ] Deploy to AWS (EC2 + RDS + S3 + CloudFront)
 - [ ] CI/CD pipeline (GitHub Actions — ci.yml + deploy.yml)
 
 ### Phase 2
-- [ ] Flashcard endpoints + connect frontend
+- [ ] **Dashboard + Progress with real data** — see Step B above
+- [ ] **Flashcard endpoints + SM-2 + connect frontend** — see Step A above
 - [ ] System Design endpoints + connect frontend
-- [ ] Progress/dashboard endpoints + connect frontend
-- [ ] Spaced repetition (SM-2) logic in QuizService
-- [ ] `POST /api/quiz/submit` — save UserQuizAttempt per question
+- [ ] `POST /api/quiz/submit` saves SM-2 fields properly (after Step A)
 
 ### Phase 3
 - [ ] AI feedback (AiFeedbackService exists, not wired to endpoint)

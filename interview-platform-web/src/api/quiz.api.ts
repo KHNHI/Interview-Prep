@@ -30,7 +30,21 @@ export interface GetQuizQuestionsParams {
   count?:      number;
 }
 
+export interface SubmitAnswerItem {
+  quizQuestionId:   string;
+  selectedOptionId: string | null;
+  timeTakenMs:      number;
+}
+
+export interface SubmitQuizResponse {
+  success: boolean;
+  data:    { correctCount: number; totalCount: number };
+}
+
 export const quizApi = {
   getQuestions: (params: GetQuizQuestionsParams = {}) =>
     client.get<QuizQuestionsResponse>("/quiz/questions", { params }),
+
+  submit: (answers: SubmitAnswerItem[]) =>
+    client.post<SubmitQuizResponse>("/quiz/submit", { answers }),
 };

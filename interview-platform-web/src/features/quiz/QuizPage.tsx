@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { cn } from "../../utils/cn";
 import { quizApi, type QuizQuestionDto } from "../../api/quiz.api";
+import { useAuthStore } from "../../stores/authStore";
+
+// ── Guest quota ────────────────────────────────────────────────────────────────
+
+const GUEST_QUIZ_KEY = "guestQuizCount";
+function getGuestQuizCount() { return parseInt(localStorage.getItem(GUEST_QUIZ_KEY) ?? "0", 10); }
+function incrementGuestQuizCount() { localStorage.setItem(GUEST_QUIZ_KEY, String(getGuestQuizCount() + 1)); }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +93,6 @@ export function QuizPage() {
     setScreen("results");
   }
 
-  // Timer countdown
   useEffect(() => {
     if (screen !== "quiz") return;
     timerRef.current = setInterval(() => {
@@ -162,6 +169,51 @@ function SetupScreen({ config, setConfig, loading, error, onStart }: {
   error:     string | null;
   onStart:   () => void;
 }) {
+  const { accessToken } = useAuthStore();
+  const isGuest = !accessToken;
+
+  if (isGuest && getGuestQuizCount() >= 3) {
+    return (
+      <div className="flex flex-col gap-5 max-w-[480px]">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-tight">Quiz</h1>
+          <p className="text-[13px] text-ink-3 mt-1">
+            Test your knowledge with timed multiple-choice questions.
+          </p>
+        </div>
+        <div className="bg-white border border-line rounded shadow-card px-6 py-8 flex flex-col items-center gap-4 text-center">
+          <div className="w-11 h-11 rounded-full border border-line-strong flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" className="text-ink-2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold text-ink-1">Free limit reached</p>
+            <p className="text-[13px] text-ink-3 mt-1.5 max-w-[300px] leading-relaxed">
+              You've used all 3 free quizzes. Create a free account to continue with unlimited quizzes and track your progress.
+            </p>
+          </div>
+          <div className="flex gap-2.5 mt-1">
+            <Link to="/register"
+              className="px-5 py-2 rounded-sm text-[13.5px] font-semibold bg-ink-1 text-white
+                         hover:bg-[#2A2A2A] transition-colors">
+              Create free account
+            </Link>
+            <Link to="/login"
+              className="px-5 py-2 rounded-sm text-[13.5px] font-medium bg-canvas text-ink-1
+                         border border-line-strong hover:bg-[#EAEAEA] transition-colors">
+              Sign in
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const remaining = 3 - getGuestQuizCount();
+
   return (
     <div className="flex flex-col gap-5 max-w-[640px]">
       <div>
@@ -252,6 +304,15 @@ function SetupScreen({ config, setConfig, loading, error, onStart }: {
           </button>
         </div>
       </div>
+
+      {isGuest && (
+        <p className="text-[12px] text-ink-3 text-center">
+          {remaining} free {remaining === 1 ? "quiz" : "quizzes"} remaining ·{" "}
+          <Link to="/register" className="underline hover:text-ink-2 transition-colors">
+            Sign up for unlimited access
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
@@ -422,12 +483,38 @@ function ResultsScreen({ questions, answers, timeTaken, onRetry, onNewQuiz }: {
   onRetry:   () => void;
   onNewQuiz: () => void;
 }) {
+  const { accessToken } = useAuthStore();
+  const submitted = useRef(false);
+
+  // Initialize to count+1 so the correct UI renders on first paint (no flash)
+  const [attemptsUsed] = useState(() => !accessToken ? getGuestQuizCount() + 1 : 0);
+
+  useEffect(() => {
+    if (submitted.current) return;
+    submitted.current = true;
+
+    if (accessToken && questions.length > 0) {
+      const perQuestionMs = Math.round((timeTaken * 1000) / questions.length);
+      const payload = questions.map((q, i) => ({
+        quizQuestionId:   q.id,
+        selectedOptionId: answers[i] ?? null,
+        timeTakenMs:      perQuestionMs,
+      }));
+      quizApi.submit(payload).catch(() => {});
+    } else if (!accessToken) {
+      incrementGuestQuizCount();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const correct = questions.filter((q, i) => answers[i] === q.correctOptionId).length;
   const total   = questions.length;
   const pct     = Math.round((correct / total) * 100);
   const mins    = String(Math.floor(timeTaken / 60)).padStart(2, "0");
   const secs    = String(timeTaken % 60).padStart(2, "0");
   const grade   = pct >= 80 ? "Excellent" : pct >= 60 ? "Good" : pct >= 40 ? "Fair" : "Keep Practicing";
+
+  const guestLimitReached = !accessToken && attemptsUsed >= 3;
 
   return (
     <div className="flex flex-col gap-5 max-w-[820px]">
@@ -451,18 +538,37 @@ function ResultsScreen({ questions, answers, timeTaken, onRetry, onNewQuiz }: {
               <span>{total - correct} wrong / skipped</span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={onNewQuiz}
-              className="px-3.5 py-1.5 rounded-sm text-[13px] font-medium bg-canvas text-ink-1
-                         border border-line-strong hover:bg-[#EAEAEA] transition-colors">
-              New Quiz
-            </button>
-            <button onClick={onRetry}
-              className="px-3.5 py-1.5 rounded-sm text-[13px] font-semibold bg-ink-1 text-white
-                         hover:bg-[#2A2A2A] transition-colors">
-              Retry Same
-            </button>
-          </div>
+
+          {guestLimitReached ? (
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex gap-2">
+                <Link to="/register"
+                  className="px-3.5 py-1.5 rounded-sm text-[13px] font-semibold bg-ink-1 text-white
+                             hover:bg-[#2A2A2A] transition-colors">
+                  Create free account
+                </Link>
+                <Link to="/login"
+                  className="px-3.5 py-1.5 rounded-sm text-[13px] font-medium bg-canvas text-ink-1
+                             border border-line-strong hover:bg-[#EAEAEA] transition-colors">
+                  Sign in
+                </Link>
+              </div>
+              <p className="text-[11px] text-ink-3">You've used all 3 free quizzes.</p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={onNewQuiz}
+                className="px-3.5 py-1.5 rounded-sm text-[13px] font-medium bg-canvas text-ink-1
+                           border border-line-strong hover:bg-[#EAEAEA] transition-colors">
+                New Quiz
+              </button>
+              <button onClick={onRetry}
+                className="px-3.5 py-1.5 rounded-sm text-[13px] font-semibold bg-ink-1 text-white
+                           hover:bg-[#2A2A2A] transition-colors">
+                Retry Same
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

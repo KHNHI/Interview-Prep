@@ -40,6 +40,7 @@ const router = createBrowserRouter([
     children: [
       { path: "questions",      ...lazy(() => import("./features/questions/QuestionsPage"),      "QuestionsPage") },
       { path: "questions/:id",  ...lazy(() => import("./features/questions/QuestionDetailPage"), "QuestionDetailPage") },
+      { path: "quiz",           ...lazy(() => import("./features/quiz/QuizPage"),                "QuizPage") },
       { path: "system-design",  ...lazy(() => import("./features/system-design/SystemDesignPage"), "SystemDesignPage") },
       { path: "pricing",        ...lazy(() => import("./features/pricing/PricingPage"),          "PricingPage") },
     ],
@@ -50,7 +51,6 @@ const router = createBrowserRouter([
     element: <ProtectedLayout />,
     children: [
       { path: "dashboard",         ...lazy(() => import("./features/dashboard/DashboardPage"),               "DashboardPage") },
-      { path: "quiz",              ...lazy(() => import("./features/quiz/QuizPage"),                         "QuizPage") },
       { path: "flashcard",         ...lazy(() => import("./features/flashcard/FlashcardPage"),               "FlashcardPage") },
       { path: "system-design/:id", ...lazy(() => import("./features/system-design/SystemDesignDetailPage"),  "SystemDesignDetailPage") },
       { path: "progress",          ...lazy(() => import("./features/progress/ProgressPage"),                 "ProgressPage") },

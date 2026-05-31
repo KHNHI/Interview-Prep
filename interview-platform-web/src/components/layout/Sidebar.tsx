@@ -3,21 +3,27 @@ import { cn } from "../../utils/cn";
 import { useAuthStore } from "../../stores/authStore";
 
 const NAV = [
-  { to: "/dashboard",     label: "Dashboard",     icon: <GridIcon /> },
-  { to: "/questions",     label: "Q&A Bank",       icon: <BookIcon /> },
-  { to: "/quiz",          label: "Quizzes",        icon: <QuizIcon /> },
-  { to: "/flashcard",     label: "Flashcards",     icon: <CardIcon /> },
-  { to: "/system-design", label: "System Design",  icon: <ArchIcon /> },
-  { to: "/progress",      label: "Analytics",      icon: <ChartIcon /> },
+  { to: "/dashboard",     label: "Dashboard",     icon: <GridIcon />,  requiresAuth: true  },
+  { to: "/questions",     label: "Q&A Bank",       icon: <BookIcon />,  requiresAuth: false },
+  { to: "/quiz",          label: "Quizzes",        icon: <QuizIcon />,  requiresAuth: false },
+  { to: "/flashcard",     label: "Flashcards",     icon: <CardIcon />,  requiresAuth: true  },
+  { to: "/system-design", label: "System Design",  icon: <ArchIcon />,  requiresAuth: false },
+  { to: "/progress",      label: "Analytics",      icon: <ChartIcon />, requiresAuth: true  },
 ];
 
 const BOTTOM_NAV = [
   { to: "/pricing", label: "Upgrade", icon: <StarIcon /> },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle:  () => void;
+}
+
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { clearAuth, accessToken } = useAuthStore();
   const navigate = useNavigate();
+  const isGuest  = !accessToken;
 
   const handleSignOut = () => {
     clearAuth();
@@ -26,52 +32,104 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-[228px] bg-sidebar flex flex-col flex-shrink-0 overflow-y-auto">
-      {/* Brand */}
-      <div className="px-[18px] pt-5 pb-4 border-b border-white/[0.07]">
-        <div className="text-[14px] font-bold text-white tracking-tight">InterviewPrep</div>
-        <div className="text-[10.5px] text-white/30 mt-0.5">Engineering Mastery</div>
+    <aside className={cn(
+      "bg-sidebar flex flex-col flex-shrink-0 overflow-y-auto overflow-x-hidden transition-[width] duration-200",
+      collapsed ? "w-[56px]" : "w-[228px]"
+    )}>
+      {/* Brand + toggle */}
+      <div className={cn(
+        "border-b border-white/[0.07] flex items-center gap-2 flex-shrink-0",
+        collapsed ? "px-3 py-5 justify-center" : "px-[18px] pt-5 pb-4"
+      )}>
+        {!collapsed && (
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-bold text-white tracking-tight">InterviewPrep</div>
+            <div className="text-[10.5px] text-white/30 mt-0.5">Engineering Mastery</div>
+          </div>
+        )}
+        <button
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="w-6 h-6 flex items-center justify-center rounded-md text-white/40
+                     hover:bg-white/10 hover:text-white/80 transition-all duration-100 flex-shrink-0"
+        >
+          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </button>
       </div>
 
       {/* Nav */}
       <nav className="p-2 flex-1">
-        <div className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-white/30 px-2.5 pt-3.5 pb-1.5">
-          Menu
-        </div>
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] mb-px transition-all duration-100",
-                isActive
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-white/[0.78] hover:bg-white/[0.055] hover:text-white/95"
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={cn("flex-shrink-0 transition-opacity", isActive ? "opacity-100" : "opacity-65")}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
+        {!collapsed && (
+          <div className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-white/30 px-2.5 pt-3.5 pb-1.5">
+            Menu
+          </div>
+        )}
+        {collapsed && <div className="pt-3" />}
 
-        <div className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-white/30 px-2.5 pt-5 pb-1.5">
-          Account
-        </div>
-        {BOTTOM_NAV.map((item) => (
+        {NAV.map(item => {
+          const locked = isGuest && item.requiresAuth;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              title={collapsed ? item.label : undefined}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center py-[7px] rounded-md text-[13px] mb-px transition-all duration-100",
+                  collapsed ? "justify-center px-0" : "gap-2.5 px-2.5",
+                  isActive
+                    ? "bg-white/10 text-white font-medium"
+                    : locked
+                    ? "text-white/40 hover:bg-white/[0.04] hover:text-white/55 cursor-pointer"
+                    : "text-white/[0.78] hover:bg-white/[0.055] hover:text-white/95"
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  {/* Icon with optional lock badge */}
+                  <span className={cn(
+                    "relative flex-shrink-0 transition-opacity",
+                    isActive ? "opacity-100" : locked ? "opacity-40" : "opacity-65"
+                  )}>
+                    {item.icon}
+                    {locked && collapsed && (
+                      <span className="absolute -top-0.5 -right-0.5 w-[9px] h-[9px] rounded-full bg-sidebar
+                                        flex items-center justify-center">
+                        <LockTinyIcon />
+                      </span>
+                    )}
+                  </span>
+
+                  {/* Label + lock icon (expanded only) */}
+                  {!collapsed && (
+                    <span className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <span className="truncate">{item.label}</span>
+                      {locked && <LockTinyIcon className="text-white/30 flex-shrink-0" />}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
+
+        {!collapsed && (
+          <div className="text-[9.5px] font-semibold uppercase tracking-[0.09em] text-white/30 px-2.5 pt-5 pb-1.5">
+            Account
+          </div>
+        )}
+        {collapsed && <div className="pt-4" />}
+
+        {BOTTOM_NAV.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
+            title={collapsed ? item.label : undefined}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] mb-px transition-all duration-100",
+                "flex items-center py-[7px] rounded-md text-[13px] mb-px transition-all duration-100",
+                collapsed ? "justify-center px-0" : "gap-2.5 px-2.5",
                 isActive
                   ? "bg-white/10 text-white font-medium"
                   : "text-white/[0.78] hover:bg-white/[0.055] hover:text-white/95"
@@ -83,7 +141,7 @@ export default function Sidebar() {
                 <span className={cn("flex-shrink-0 transition-opacity", isActive ? "opacity-100" : "opacity-65")}>
                   {item.icon}
                 </span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
               </>
             )}
           </NavLink>
@@ -93,17 +151,51 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-2 border-t border-white/[0.07]">
         <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] w-full text-left text-white/[0.78] hover:bg-white/[0.055] hover:text-white/95 transition-all duration-100"
+          onClick={isGuest ? () => navigate("/login") : handleSignOut}
+          title={collapsed ? (isGuest ? "Sign in" : "Sign out") : undefined}
+          className={cn(
+            "flex items-center py-[7px] rounded-md text-[13px] w-full transition-all duration-100",
+            collapsed ? "justify-center px-0" : "gap-2.5 px-2.5",
+            "text-white/[0.78] hover:bg-white/[0.055] hover:text-white/95"
+          )}
         >
-          <span className="opacity-65"><SignOutIcon /></span>
-          <span>{accessToken ? "Sign out" : "Sign in"}</span>
+          <span className="opacity-65 flex-shrink-0">
+            <SignOutIcon />
+          </span>
+          {!collapsed && <span>{isGuest ? "Sign in" : "Sign out"}</span>}
         </button>
       </div>
     </aside>
   );
 }
 
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function ChevronLeftIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  );
+}
+function ChevronRightIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  );
+}
+function LockTinyIcon({ className }: { className?: string }) {
+  return (
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  );
+}
 function GridIcon() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
 }
