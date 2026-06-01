@@ -35,6 +35,7 @@ public class DataSeeder
 
         await SeedQuestionsAsync(seedDir);
         await SeedQuizQuestionsAsync(seedDir);
+        await SeedSystemDesignAsync(seedDir);
     }
 
     // ── Q&A bank ────────────────────────────────────────────────────────────
@@ -105,6 +106,40 @@ public class DataSeeder
         }
     }
 
+    // ── System Design cases ──────────────────────────────────────────────────
+
+    private async Task SeedSystemDesignAsync(string seedDir)
+    {
+        if (await _db.SystemDesignCases.AnyAsync())
+        {
+            _logger.LogInformation("System design cases already seeded — skipping.");
+            return;
+        }
+
+        var filePath = Path.Combine(seedDir, "system-design-cases.json");
+        if (!File.Exists(filePath))
+        {
+            _logger.LogWarning("system-design-cases.json not found — skipping.");
+            return;
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(filePath);
+            var dtos = JsonSerializer.Deserialize<List<SystemDesignSeedDto>>(json, JsonOpts);
+            if (dtos is null || dtos.Count == 0) return;
+
+            var entities = dtos.Select(MapSystemDesign).ToList();
+            _db.SystemDesignCases.AddRange(entities);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Seeded {Total} system design cases.", entities.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to seed system-design-cases.json");
+        }
+    }
+
     // ── Mappers ──────────────────────────────────────────────────────────────
 
     private static Question MapQuestion(QuestionSeedDto dto) => new()
@@ -138,6 +173,24 @@ public class DataSeeder
         UpdatedAt       = DateTime.UtcNow,
     };
 
+    private static SystemDesignCase MapSystemDesign(SystemDesignSeedDto dto) => new()
+    {
+        TitleEn           = dto.TitleEn,
+        Difficulty        = ParseDifficulty(dto.Difficulty),
+        Summary           = dto.Summary,
+        Tags              = dto.Tags ?? Array.Empty<string>(),
+        IsPro             = dto.IsPro,
+        OrderIndex        = dto.OrderIndex,
+        OverviewEn        = dto.OverviewEn,
+        RequirementsEn    = dto.RequirementsEn,
+        HighLevelDesignEn = dto.HighLevelDesignEn,
+        DeepDiveEn        = dto.DeepDiveEn,
+        TradeoffsEn       = dto.TradeoffsEn,
+        Hints             = dto.Hints,
+        CreatedAt         = DateTime.UtcNow,
+        UpdatedAt         = DateTime.UtcNow,
+    };
+
     private static Difficulty ParseDifficulty(string s) =>
         Enum.TryParse<Difficulty>(s, ignoreCase: true, out var d) ? d : Difficulty.Easy;
 
@@ -169,4 +222,19 @@ public class DataSeeder
     );
 
     private record QuizOptionSeedDto(string Id, string Label, string Desc);
+
+    private record SystemDesignSeedDto(
+        string TitleEn,
+        string Difficulty,
+        string? Summary,
+        string[]? Tags,
+        bool IsPro,
+        int? OrderIndex,
+        string? OverviewEn,
+        string? RequirementsEn,
+        string? HighLevelDesignEn,
+        string? DeepDiveEn,
+        string? TradeoffsEn,
+        string? Hints
+    );
 }

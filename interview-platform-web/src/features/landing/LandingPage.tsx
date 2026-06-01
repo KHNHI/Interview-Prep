@@ -233,7 +233,7 @@ function HowItWorksSection() {
           {/* Connecting line */}
           <div className="absolute top-[22px] left-[calc(16.66%+8px)] right-[calc(16.66%+8px)] h-px bg-line" />
 
-          {STEPS.map((s, i) => (
+          {STEPS.map((s) => (
             <div key={s.n} className="relative pr-10">
               {/* Number badge */}
               <div className="w-11 h-11 rounded-full bg-ink-1 flex items-center justify-center mb-5 relative z-10">

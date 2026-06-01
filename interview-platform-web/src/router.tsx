@@ -41,7 +41,9 @@ const router = createBrowserRouter([
       { path: "questions",      ...lazy(() => import("./features/questions/QuestionsPage"),      "QuestionsPage") },
       { path: "questions/:id",  ...lazy(() => import("./features/questions/QuestionDetailPage"), "QuestionDetailPage") },
       { path: "quiz",           ...lazy(() => import("./features/quiz/QuizPage"),                "QuizPage") },
-      { path: "system-design",  ...lazy(() => import("./features/system-design/SystemDesignPage"), "SystemDesignPage") },
+      { path: "system-design",       ...lazy(() => import("./features/system-design/SystemDesignPage"),       "SystemDesignPage") },
+      { path: "system-design/guide", ...lazy(() => import("./features/system-design/SystemDesignGuidePage"),  "SystemDesignGuidePage") },
+      { path: "system-design/:id",   ...lazy(() => import("./features/system-design/SystemDesignDetailPage"), "SystemDesignDetailPage") },
       { path: "pricing",        ...lazy(() => import("./features/pricing/PricingPage"),          "PricingPage") },
     ],
   },
@@ -52,7 +54,6 @@ const router = createBrowserRouter([
     children: [
       { path: "dashboard",         ...lazy(() => import("./features/dashboard/DashboardPage"),               "DashboardPage") },
       { path: "flashcard",         ...lazy(() => import("./features/flashcard/FlashcardPage"),               "FlashcardPage") },
-      { path: "system-design/:id", ...lazy(() => import("./features/system-design/SystemDesignDetailPage"),  "SystemDesignDetailPage") },
       { path: "progress",          ...lazy(() => import("./features/progress/ProgressPage"),                 "ProgressPage") },
     ],
   },

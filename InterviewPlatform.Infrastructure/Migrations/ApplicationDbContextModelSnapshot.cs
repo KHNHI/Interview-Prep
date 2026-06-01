@@ -235,14 +235,26 @@ namespace InterviewPlatform.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeepDiveEn")
+                        .HasColumnType("text");
+
                     b.Property<int>("Difficulty")
                         .HasColumnType("integer");
+
+                    b.Property<string>("HighLevelDesignEn")
+                        .HasColumnType("text");
 
                     b.Property<string>("Hints")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsPro")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OverviewEn")
+                        .HasColumnType("text");
 
                     b.Property<string>("RequirementsEn")
                         .HasColumnType("text");
@@ -256,11 +268,21 @@ namespace InterviewPlatform.Infrastructure.Migrations
                     b.Property<string>("SolutionDiagramUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("Summary")
+                        .HasColumnType("text");
+
+                    b.Property<string[]>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("TitleVi")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TradeoffsEn")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")

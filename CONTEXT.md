@@ -92,12 +92,13 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 - `UserProgress` — composite key (userId, questionId), status, viewedAt
 - `UserQuizAttempt` — SM-2 fields: easeFactor, intervalDays, repetitions, nextReviewAt, attemptedAt
 - `Subscription` — plan, status, stripeSubscriptionId, periodStart/End
-- `SystemDesignCase` — requirements, hints, scoringRubric, solutionDiagramUrl, isPro
-- `SystemDesignAttempt` — solutionText, aiFeedback (JSONB)
+- `SystemDesignCase` — **reading/study case** (TitleEn, Difficulty, Summary, OverviewEn, RequirementsEn, HighLevelDesignEn, DeepDiveEn, TradeoffsEn, Tags[], OrderIndex, Hints, IsPro). Mock-interview fields (scoringRubric, solutionDiagramUrl) reserved for a future practice mode.
+- `SystemDesignAttempt` — solutionText, aiFeedback (JSONB) — reserved for future mock-interview mode
 
 ### EF Migrations
 - `20260529102836_Init` — initial schema
 - `StandaloneQuizQuestion` — makes QuizQuestion standalone (nullable FK + new fields)
+- `20260601152136_SystemDesignReadingContent` — adds reading-content fields to SystemDesignCase (Summary, OverviewEn, HighLevelDesignEn, DeepDiveEn, TradeoffsEn, Tags, OrderIndex)
 
 ### Application Layer — Implemented CQRS
 
