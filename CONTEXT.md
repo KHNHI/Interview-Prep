@@ -8,7 +8,7 @@
 A bilingual (EN/VI) fullstack interview prep platform for software engineers.
 Features: Q&A bank, quizzes, flashcards (SM-2), system design mock interviews, AI feedback, progress analytics, subscription tiers.
 
-**Live target:** `https://lazyndev.io.vn` (API: `https://api.lazyndev.io.vn`)
+**Live target:** `https://lazyndev.io.vn` (API: `https://api.lazyndev.io.vn`) — **deployed on AWS** (see §15)
 **Local frontend:** `http://localhost:5173`
 **Local API:** `http://localhost:5000`
 **Swagger:** `http://localhost:5000/swagger`
@@ -432,15 +432,19 @@ docker compose exec postgres psql -U dev_user -d interview_platform -c "\dt"
 
 ### Recent Commits
 ```
+9b9b7b9  Cache-bust favicon URL so logo updates show immediately
+e6bdd28  Deploy API via SSM Run Command instead of SSH
+af5b504  Replace Vite favicon with InterviewPrep logo
+441628f  Add AWS deployment + CI/CD scaffolding
+7bc7635  implement the system design feature
+67df55a  fix the redirect auth, connect the flashcard feature
+f94f3be  fix quiz submit (guest), redesign sidebar, dashboard real data
 b2dd174  add quizz feature
-160cf46  fix the quizz page and seed data for quizz
-bc2b37a  Connect Q&A to API, add seed data, add GetQuestionById endpoint
-2056ab1  Redesign frontend and use tailwind, add public pages
-bff9f81  Fix CORS, port config, add migrations and project summary
 ```
 
-### Pending (not yet committed)
-All work since `b2dd174` is uncommitted:
+> **`docs/` is git-ignored** (deploy runbook + interview prep are kept local only).
+
+### Recent work (all committed to `main`; deployed live)
 
 **Quiz submit + guest quota:**
 - `SubmitQuizCommand` + handler + `QuizController POST /api/quiz/submit`
@@ -476,28 +480,28 @@ All work since `b2dd174` is uncommitted:
 - Mock-interview UI/entity fields preserved (unused) for a future practice mode
 - Incidental: removed dead `App.tsx` Vite-template code + unused var in `LandingPage.tsx` (were breaking `npm run build`)
 
+**AWS deployment + CI/CD (live):**
+- API: `/health` endpoint, `UseForwardedHeaders` (proxy-aware), comma-separated multi-origin CORS, migrate-on-startup (`db.Database.MigrateAsync()`)
+- `Dockerfile`: listens on 8080, runs as non-root `app` user
+- `deploy/`: `docker-compose.prod.yml` (api + redis + Caddy), `Caddyfile` (auto-HTTPS), `.env.production.example`
+- `.github/workflows/`: `ci.yml` (build + test), `deploy.yml` (build → ECR → **SSM Run Command** deploy → S3 + CloudFront)
+- Domain changed from placeholder to **`lazyndev.io.vn`** / **`api.lazyndev.io.vn`**; favicon replaced + cache-busted (`?v=2`)
+- Full details in §15.
+
 ---
 
 ## 12. What's Next — Roadmap
 
 ### ⚡ NEXT SESSION
 
-Phase 1 core features are complete. Remaining work:
+Phase 1 core features are complete **and the app is deployed with CI/CD** (§15). Remaining work:
 
 #### Stripe checkout
 Wire the Pricing page CTAs to actual Stripe checkout:
 - `StripeService` exists in Infrastructure but not wired to an endpoint
 - Need `POST /api/subscriptions/checkout` → creates Stripe checkout session
 - Frontend: pricing page "Upgrade" buttons → redirect to Stripe hosted checkout
-- Webhook handler for `checkout.session.completed`
-
-#### Deploy to AWS
-- EC2 + RDS (PostgreSQL) + S3 + CloudFront
-- Docker-based deployment
-- Health check endpoint `/health` for ALB (currently missing)
-
-#### CI/CD pipeline
-- GitHub Actions: `ci.yml` (build + test) + `deploy.yml` (push to EC2)
+- Webhook handler for `checkout.session.completed` (point Stripe webhook at `https://api.lazyndev.io.vn`)
 
 ---
 
@@ -512,9 +516,9 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 - [x] Flashcard feature — SM-2 review queue, flip animation, rating buttons
 - [x] Sidebar — collapsible, guest lock indicators
 - [x] System Design — reading reference (framework guide + 4 worked-example cases, API-driven)
+- [x] Deploy to AWS — EC2 + Docker Compose + Caddy, RDS, S3 + CloudFront (live)
+- [x] CI/CD pipeline — GitHub Actions, OIDC, SSM-based deploy
 - [ ] Stripe checkout
-- [ ] Deploy to AWS
-- [ ] CI/CD pipeline
 
 ### Phase 2
 - [ ] AI feedback endpoint (AiFeedbackService exists, not wired)
@@ -524,13 +528,14 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 
 ### Technical Debt
 - Delete `Class1.cs` placeholder files in Domain/Application/Infrastructure
-- Add health check endpoint `/health` for ALB
 - Add rate limiting on auth endpoints (brute force protection)
 - Store refresh tokens in DB (currently not persisted — 60 min JWT only)
-- Replace JWT secret with AWS Secrets Manager in production
+- Move prod secrets from on-box `.env` to AWS Secrets Manager / SSM Parameter Store
 - Write actual unit tests (stubs exist, no tests written)
 - Add error boundaries in React
 - `DashboardPage` "Continue Learning" card is hardcoded
+- **Prod hardening:** add monitoring/alerting; move Redis to ElastiCache; ALB + 2+ instances for zero-downtime (then move migrations out of startup); the deploy auto-migrates on startup (fine for a single instance only)
+- ✅ Done: `/health` endpoint; HTTPS (Caddy + CloudFront); SSM deploy (no inbound port 22)
 
 ---
 
@@ -543,11 +548,18 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 - CORS whitelist (not wildcard)
 - Secrets git-ignored
 
-### Must fix before production
+### Production posture (live)
+- ✅ HTTPS everywhere (Caddy/Let's Encrypt on API, ACM/CloudFront on frontend)
+- ✅ No inbound SSH for deploys (SSM Run Command); port 22 restricted to owner IP
+- ✅ RDS private (no public access), reachable only from the EC2 security group
+- ✅ GitHub→AWS auth via OIDC (no long-lived access keys)
+- ✅ Secrets git-ignored (on-box `.env`, chmod 600)
+
+### Still to harden
 - Rate limit `POST /api/auth/login` (brute force)
-- Replace JWT secret placeholder with AWS Secrets Manager
+- Move JWT secret + DB password to AWS Secrets Manager / SSM Parameter Store
 - Persist + rotate refresh tokens
-- HTTP→HTTPS redirect (CloudFront handles this)
+- Add monitoring/alerting (currently blind to incidents)
 
 ---
 
@@ -556,8 +568,58 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 ```yaml
 postgres:  postgres:16-alpine   port 5433:5432  (5433 on host, 5432 in container)
 redis:     redis:7-alpine        port 6379:6379
-api:       custom Dockerfile     port 5000:80    (not used in local dev — run dotnet directly)
+api:       custom Dockerfile     port 5000:8080  (container now listens on 8080; not used in local dev — run dotnet directly)
 web:       custom Dockerfile     port 3000:80    (not used in local dev — run npm directly)
 ```
 
 > **Why port 5433?** Local PostgreSQL installation already occupies 5432. Docker maps to 5433 to avoid conflict.
+
+> **Prod compose is separate:** `deploy/docker-compose.prod.yml` (api + redis + Caddy, no Postgres — uses RDS). See §15.
+
+---
+
+## 15. Production Deployment (AWS)
+
+> Full click-by-click runbook lives in the git-ignored `docs/DEPLOYMENT.md`. This is the summary.
+
+### Architecture
+```
+Users ─ https://lazyndev.io.vn ──────→ CloudFront ──→ S3            (React static build)
+      ─ https://api.lazyndev.io.vn ──→ EC2 (Caddy auto-HTTPS)
+                                         ├─ api container (:8080)
+                                         └─ redis container
+                                      ──→ RDS PostgreSQL (private)
+```
+
+| Concern | Service |
+|---|---|
+| Region | **ap-southeast-2** (Sydney) |
+| Frontend | S3 (private) + CloudFront (OAC); ACM cert in **us-east-1**; SPA 403/404 → `/index.html` |
+| API host | EC2 (Amazon Linux 2023, free-tier micro + 2 GB swap), Docker Compose |
+| TLS (API) | Caddy + Let's Encrypt (auto) for `api.lazyndev.io.vn` |
+| Database | RDS PostgreSQL (private; inbound 5432 only from EC2 security group) |
+| Cache | Redis container on the box (ElastiCache later) |
+| Image registry | ECR (`interviewprep-api`) |
+| DNS | apex/`www` → CloudFront, `api` → EC2 Elastic IP |
+
+### CI/CD (GitHub Actions)
+- **`ci.yml`** — on every PR/push: backend build + unit tests, frontend typecheck + build.
+- **`deploy.yml`** — on push to `main`:
+  1. Build API image → push to ECR (tagged with commit SHA + `latest`).
+  2. **Deploy via SSM Run Command** → box pulls image + `docker compose up -d` (no SSH / port 22).
+  3. Build frontend → `aws s3 sync` → CloudFront invalidation.
+- **Auth:** GitHub → AWS via **OIDC** (role `interviewprep-gha-deploy`), no static keys.
+- **IAM:** instance role `interviewprep-ec2-role` has ECR read + `AmazonSSMManagedInstanceCore`.
+
+### Required GitHub secrets
+`AWS_ROLE_ARN`, `EC2_INSTANCE_ID`, `S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
+(the old SSH secrets `EC2_HOST`/`EC2_USER`/`EC2_SSH_KEY` are no longer used).
+
+### How to deploy
+Just `git push origin main` → the pipeline does the rest. Rollback = re-point `ECR_IMAGE`
+in the box's `/opt/interviewprep/.env` to an older SHA tag and `docker compose up -d`.
+
+### Notes / gotchas hit during setup
+- Migrations run on container startup (fine for one instance; move to a CI step if scaling out).
+- The box's `/opt/interviewprep/.env` (chmod 600) holds prod secrets — never committed.
+- Favicon is cache-busted via `?v=2` in `index.html` (browsers cache favicons hard).
