@@ -14,6 +14,15 @@ dist/
 .env.local
 interview-platform-web/.env.production
 
+# Deploy secrets — only the .example is tracked
+deploy/.env
+**/.env
+!**/.env.*.example
+!**/.env.development
+
+# Personal docs (deploy runbook, interview prep) — kept local
+docs/
+
 # Misc
 .DS_Store
 *.log

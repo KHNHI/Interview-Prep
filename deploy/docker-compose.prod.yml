@@ -1,0 +1,51 @@
+# Production stack for the EC2 host.
+# Postgres is NOT here — it runs on managed RDS. This box runs:
+#   - api   : the .NET API image pulled from ECR
+#   - redis : cache/quota store (fine on-box for now; move to ElastiCache later)
+#   - caddy : reverse proxy that terminates HTTPS automatically via Let's Encrypt
+#
+# Usage on the box (in /opt/interviewprep):
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Requires a sibling `.env` file (chmod 600) — see .env.production.example.
+
+services:
+  api:
+    image: ${ECR_IMAGE}          # e.g. 1234567890.dkr.ecr.ap-southeast-1.amazonaws.com/interviewprep-api:latest
+    restart: always
+    env_file: .env
+    expose:
+      - "8080"                   # internal only; reached by caddy over the compose network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"                  # http -> auto-redirects to https + serves ACME challenge
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data         # persists issued TLS certificates
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  redis_data:
+  caddy_data:
+  caddy_config:

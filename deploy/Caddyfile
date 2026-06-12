@@ -1,0 +1,17 @@
+# Caddy automatically obtains and renews a Let's Encrypt certificate for this
+# domain, as long as:
+#   1. an A record points api.lazyndev.io.vn -> the EC2 public IP, and
+#   2. ports 80 and 443 are open in the security group.
+
+# Global options block — MUST be first. Use your real email so Let's Encrypt
+# can warn you about expiries.
+{
+	email admin@lazyndev.io.vn
+}
+
+api.lazyndev.io.vn {
+	encode gzip
+	# Caddy automatically adds X-Forwarded-For / -Proto / -Host to the upstream,
+	# which the API's ForwardedHeaders middleware reads.
+	reverse_proxy api:8080
+}

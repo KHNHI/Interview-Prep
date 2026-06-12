@@ -4,6 +4,8 @@ using InterviewPlatform.Application.Common.Behaviours;
 using InterviewPlatform.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,12 +60,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// AllowedOrigins may be a comma-separated list (e.g. prod domain + www + localhost).
+var allowedOrigins = (builder.Configuration["AllowedOrigins"] ?? "http://localhost:5173")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(opts => opts.AddDefaultPolicy(policy =>
-    policy.WithOrigins(builder.Configuration["AllowedOrigins"] ?? "http://localhost:3000")
+    policy.WithOrigins(allowedOrigins)
           .AllowAnyMethod()
           .AllowAnyHeader()));
 
+builder.Services.AddHealthChecks();
+
+// Trust X-Forwarded-* from the reverse proxy (Caddy/CloudFront) so the app sees
+// the real client IP and https scheme. The container port is only reachable from
+// the proxy on the same Docker network, so trusting all proxies here is safe.
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.KnownNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
@@ -77,10 +97,17 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");   // ALB / uptime liveness probe (anonymous)
 
-// ── Seed database on startup ─────────────────────────────────────────────
+// ── Apply migrations + seed on startup ───────────────────────────────────
+// Self-migrating on boot keeps deploys to a single EC2 instance simple.
+// (If you ever run multiple API instances, move migrations to a CI step to
+//  avoid two instances racing to migrate at the same time.)
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<InterviewPlatform.Infrastructure.Persistence.ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
     var seeder = scope.ServiceProvider.GetRequiredService<InterviewPlatform.Infrastructure.Persistence.DataSeeder>();
     await seeder.SeedAsync();
 }

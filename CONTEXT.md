@@ -8,7 +8,7 @@
 A bilingual (EN/VI) fullstack interview prep platform for software engineers.
 Features: Q&A bank, quizzes, flashcards (SM-2), system design mock interviews, AI feedback, progress analytics, subscription tiers.
 
-**Live target:** `https://interviewprep.vn` (not deployed yet)
+**Live target:** `https://lazyndev.io.vn` (API: `https://api.lazyndev.io.vn`)
 **Local frontend:** `http://localhost:5173`
 **Local API:** `http://localhost:5000`
 **Swagger:** `http://localhost:5000/swagger`
@@ -114,6 +114,8 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 | `ReviewFlashcardCommand` | handler | Applies SM-2 algorithm to UserQuizAttempt, updates NextReviewAt |
 | `RegisterCommand` | handler | BCrypt hash, return JWT |
 | `LoginCommand` | handler | Verify credentials, return JWT |
+| `GetSystemDesignCasesQuery` | handler | Lists study cases (id, title, difficulty, summary, tags, isPro); optional difficulty filter |
+| `GetSystemDesignCaseByIdQuery` | handler | Returns `SystemDesignCaseDetailDto` with all Markdown sections |
 | `ValidationBehaviour<TRequest,TResponse>` | — | FluentValidation pipeline |
 
 ### SM-2 Algorithm (ReviewFlashcardCommandHandler)
@@ -144,8 +146,9 @@ nextReviewAt = today + intervalDays
 | `questions-os.json` | Questions | 8 |
 | `questions-cloud.json` | Questions | 8 |
 | `quiz-questions.json` | QuizQuestions | 40 (8 per category: DSA/Networking/DB/OS/Cloud) |
+| `system-design-cases.json` | SystemDesignCases | 4 (URL Shortener, Rate Limiter, Twitter Feed, Notification System) |
 
-**Total seeded**: 42 Q&A questions + 40 MCQ quiz questions
+**Total seeded**: 42 Q&A questions + 40 MCQ quiz questions + 4 system design cases
 
 > Quiz questions are MCQ-only — NOT linked to Q&A questions. `QuestionId` is null for all seed quiz questions.
 
@@ -162,6 +165,8 @@ nextReviewAt = today + intervalDays
 | `ProgressController` | `GET /api/progress/radar` | `[Authorize]` |
 | `FlashcardsController` | `GET /api/flashcards` | `[Authorize]` |
 | `FlashcardsController` | `POST /api/flashcards/{id}/review` | `[Authorize]` |
+| `SystemDesignController` | `GET /api/system-design?difficulty` | Public |
+| `SystemDesignController` | `GET /api/system-design/{id}` | Public |
 
 ### Key API Response Shapes
 
@@ -265,7 +270,8 @@ src/
 │   ├── questions.api.ts       ← getAll(params), getById(id, lang)
 │   ├── quiz.api.ts            ← getQuestions(params), submit() (uses fetch, not Axios)
 │   ├── progress.api.ts        ← getDashboard(), getRadar()
-│   └── flashcards.api.ts      ← getCards(), reviewCard(id, rating)
+│   ├── flashcards.api.ts      ← getCards(), reviewCard(id, rating)
+│   └── systemDesign.api.ts    ← getAll(), getById(id)
 ├── components/
 │   ├── layout/
 │   │   ├── Layout.tsx         ← Sidebar + Header + Outlet; owns collapsed state
@@ -274,7 +280,8 @@ src/
 │   │   ├── Navbar.tsx         ← Dark top bar for public pages
 │   │   ├── Sidebar.tsx        ← Collapsible (56px/228px); lock icons for guest on protected routes
 │   │   └── Header.tsx         ← White top bar inside app
-│   └── ui/                    ← (empty dir, add shared components here)
+│   └── ui/
+│       └── MarkdownRenderer.tsx ← Shared MD renderer (## headers, **bold**, code, lists, tables); used by Questions + System Design
 ├── features/
 │   ├── landing/LandingPage.tsx
 │   ├── auth/LoginPage.tsx               ← Sets localStorage["access_token"] on login
@@ -284,8 +291,9 @@ src/
 │   ├── questions/QuestionDetailPage.tsx ← Connected to GET /api/questions/:id
 │   ├── quiz/QuizPage.tsx                ← Public; 3-screen flow; guest quota (3 free); SM-2 submit
 │   ├── flashcard/FlashcardPage.tsx      ← Connected to GET /api/flashcards + POST review
-│   ├── system-design/SystemDesignPage.tsx     ← Hardcoded
-│   ├── system-design/SystemDesignDetailPage.tsx ← Hardcoded
+│   ├── system-design/SystemDesignPage.tsx       ← Connected to GET /api/system-design (list + framework banner)
+│   ├── system-design/SystemDesignGuidePage.tsx  ← Static "How to approach a system design interview" 7-step guide
+│   ├── system-design/SystemDesignDetailPage.tsx ← Connected to GET /api/system-design/:id (read-only tabbed study view)
 │   ├── progress/ProgressPage.tsx        ← Connected to GET /api/progress/radar
 │   └── pricing/PricingPage.tsx
 ├── stores/authStore.ts        ← Zustand + persist; key "auth-store"; fields: accessToken, userId, planTier
@@ -297,12 +305,13 @@ src/
 ### Router Groups (`router.tsx`)
 ```
 PublicLayout    →  /
-Layout          →  /questions, /questions/:id, /quiz, /system-design, /pricing
-ProtectedLayout →  /dashboard, /flashcard, /system-design/:id, /progress
+Layout          →  /questions, /questions/:id, /quiz, /system-design, /system-design/guide, /system-design/:id, /pricing
+ProtectedLayout →  /dashboard, /flashcard, /progress
 (no layout)     →  /login, /register
 ```
 
 > **Important**: `/quiz` is in the public `Layout` (NOT ProtectedLayout) — guests can take quizzes with a 3-attempt limit.
+> **System Design** is a read-only study reference (all routes public). `/system-design/guide` is static; the list + detail pages are API-driven. Route ordering: `guide` (static) is ranked above `:id` (dynamic) by React Router.
 
 ### Auth Token Storage
 - Login page sets **two** keys on successful login:
@@ -328,12 +337,13 @@ ProtectedLayout →  /dashboard, /flashcard, /system-design/:id, /progress
 | `ProgressPage` | `GET /api/progress/radar` | TanStack Query; empty state if no data |
 | `FlashcardPage` | `GET /api/flashcards` | Plain useEffect fetch; SM-2 queue |
 | `FlashcardPage` | `POST /api/flashcards/{id}/review` | Called on each rating; moves to next card |
+| `SystemDesignPage` | `GET /api/system-design` | TanStack Query; list cards + framework banner |
+| `SystemDesignDetailPage` | `GET /api/system-design/:id` | TanStack Query; tabbed Markdown reading view; Deep Dive/Trade-offs Pro-gated |
 
 ### Still hardcoded (needs backend endpoint)
 | Page | Needs | Planned API |
 |---|---|---|
-| `SystemDesignPage` | Cases list | `GET /api/system-design` |
-| `SystemDesignDetailPage` | Case detail | `GET /api/system-design/:id` |
+| `SystemDesignGuidePage` | Framework guide content | Static by design (canonical, rarely changes) — no API needed |
 | `DashboardPage` | "Continue Learning" card | Future endpoint |
 
 ### QuizPage — Guest Quota
@@ -452,8 +462,19 @@ All work since `b2dd174` is uncommitted:
 - `Sidebar.tsx` — collapsible (56px/228px), guest lock icons on protected routes
 
 **Auth / client fixes:**
-- `client.ts` — on 401: clears both `"access_token"` + `"auth-store"`, redirects to `/login`
+- `client.ts` — on 401: clears both `"access_token"` + `"auth-store"`, redirects to `/login`; **skips redirect for `/auth/*` endpoints** so login errors show in-place instead of bouncing
 - `quiz.api.ts submit()` — uses raw `fetch` to bypass Axios interceptor (prevents mid-quiz token expiry from bouncing user off results)
+- `Program.cs` — **`opts.MapInboundClaims = false`** on JwtBearer so the `sub` claim isn't remapped to `ClaimTypes.NameIdentifier`. Without this, controllers reading `JwtRegisteredClaimNames.Sub` got null → 401 → login redirect loop after a successful sign-in.
+- `LoginPage.tsx` / `RegisterPage.tsx` — replaced `alert()` with inline `setError()` messages
+
+**System Design — reading reference feature:**
+- Entity `SystemDesignCase` extended + migration `SystemDesignReadingContent` (applied)
+- `GetSystemDesignCasesQuery` / `GetSystemDesignCaseByIdQuery` + handlers → `SystemDesignController` (public)
+- `system-design-cases.json` (4 cases) + `DataSeeder.SeedSystemDesignAsync`
+- `components/ui/MarkdownRenderer.tsx` extracted from QuestionDetailPage (shared)
+- `systemDesign.api.ts`, `SystemDesignPage.tsx` (list), `SystemDesignGuidePage.tsx` (framework), `SystemDesignDetailPage.tsx` (detail), `router.tsx` (detail moved to public Layout, `/system-design/guide` added)
+- Mock-interview UI/entity fields preserved (unused) for a future practice mode
+- Incidental: removed dead `App.tsx` Vite-template code + unused var in `LandingPage.tsx` (were breaking `npm run build`)
 
 ---
 
@@ -462,11 +483,6 @@ All work since `b2dd174` is uncommitted:
 ### ⚡ NEXT SESSION
 
 Phase 1 core features are complete. Remaining work:
-
-#### System Design endpoints + frontend
-Connect the still-hardcoded System Design pages:
-- `GET /api/system-design` → list of cases
-- `GET /api/system-design/:id` → case detail
 
 #### Stripe checkout
 Wire the Pricing page CTAs to actual Stripe checkout:
@@ -495,7 +511,7 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 - [x] Analytics/Progress connected to real data (radar chart)
 - [x] Flashcard feature — SM-2 review queue, flip animation, rating buttons
 - [x] Sidebar — collapsible, guest lock indicators
-- [ ] System Design endpoints + connect frontend
+- [x] System Design — reading reference (framework guide + 4 worked-example cases, API-driven)
 - [ ] Stripe checkout
 - [ ] Deploy to AWS
 - [ ] CI/CD pipeline
