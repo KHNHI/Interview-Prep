@@ -1,9 +1,14 @@
 name: Deploy
 
 # Deploys on every push to main (after CI passes), or manually.
+# Skips deploy when a commit only touches docs/terraform/markdown (no app change).
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'terraform/**'
   workflow_dispatch:
 
 # Required for OIDC federation with AWS (no long-lived access keys).
