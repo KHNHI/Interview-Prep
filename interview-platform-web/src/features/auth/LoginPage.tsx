@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,16 +16,32 @@ export function LoginPage() {
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
   const setAuth  = useAuthStore(s => s.setAuth);
   const navigate = useNavigate();
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
 
   const onSubmit = async (data: FormData) => {
+    setUnverifiedEmail(null);
+    setResent(false);
     try {
       const res = await authApi.login(data.email, data.password);
       setAuth(res.data.data.accessToken, res.data.data.userId);
       localStorage.setItem("access_token", res.data.data.accessToken);
       navigate("/dashboard");
-    } catch {
-      setError("password", { message: "Invalid email or password" });
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 403) {
+        // Email not verified — offer to resend the link.
+        setUnverifiedEmail(data.email);
+        setError("email", { message: "Email not verified. Check your inbox for the link." });
+      } else {
+        setError("password", { message: "Invalid email or password" });
+      }
     }
+  };
+
+  const resend = async () => {
+    if (!unverifiedEmail) return;
+    try { await authApi.resendVerification(unverifiedEmail); setResent(true); } catch { /* ignore */ }
   };
 
   return (
@@ -78,6 +95,21 @@ export function LoginPage() {
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
+
+          {unverifiedEmail && (
+            <div className="mt-3.5 px-3.5 py-3 rounded-sm bg-surface-alt border border-line text-center">
+              {resent ? (
+                <p className="text-[12.5px] text-ink-2">Verification email sent ✓ — check your inbox.</p>
+              ) : (
+                <p className="text-[12.5px] text-ink-2">
+                  Need a new link?{" "}
+                  <button onClick={resend} className="text-ink-1 font-medium underline underline-offset-[3px]">
+                    Resend verification email
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
 
           <p className="text-center text-[13px] text-ink-3 mt-5">
             No account?{" "}

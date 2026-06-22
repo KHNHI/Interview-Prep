@@ -25,6 +25,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
         if (user.PasswordHash == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedException("Invalid credentials.");
 
+        if (!user.IsEmailVerified)
+            throw new EmailNotVerifiedException("Please verify your email before signing in.");
+
         return new AuthResult(
             _tokens.GenerateAccessToken(user),
             _tokens.GenerateRefreshToken(),

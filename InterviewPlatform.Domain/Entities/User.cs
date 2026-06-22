@@ -14,6 +14,11 @@ public class User : BaseEntity
     public DateTime? PlanExpiresAt { get; set; }
     public string? StripeCustomerId { get; set; }
 
+    // ── Email verification ───────────────────────────────────────────────────
+    public bool IsEmailVerified { get; set; }
+    public string? EmailVerificationToken { get; set; }
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
+
     public ICollection<UserProgress> Progress { get; set; } = new List<UserProgress>();
     public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }

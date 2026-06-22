@@ -1,5 +1,7 @@
 using InterviewPlatform.Application.Features.Auth.Commands.Login;
 using InterviewPlatform.Application.Features.Auth.Commands.Register;
+using InterviewPlatform.Application.Features.Auth.Commands.ResendVerification;
+using InterviewPlatform.Application.Features.Auth.Commands.VerifyEmail;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -26,5 +28,21 @@ public class AuthController : ControllerBase
     {
         var result = await _mediator.Send(command, ct);
         return Ok(new { success = true, data = result });
+    }
+
+    /// <summary>Activate an account from the link in the verification email.</summary>
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command, ct);
+        return Ok(new { success = true, data = result });
+    }
+
+    /// <summary>Re-send the verification email for an unverified account.</summary>
+    [HttpPost("resend-verification")]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationCommand command, CancellationToken ct)
+    {
+        await _mediator.Send(command, ct);
+        return Ok(new { success = true, data = (object?)null });
     }
 }

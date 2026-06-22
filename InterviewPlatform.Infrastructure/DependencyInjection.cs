@@ -1,3 +1,4 @@
+using Amazon.SimpleEmailV2;
 using InterviewPlatform.Application.Interfaces;
 using InterviewPlatform.Infrastructure.Persistence;
 using InterviewPlatform.Infrastructure.Services;
@@ -29,6 +30,20 @@ public static class DependencyInjection
 
         services.AddHttpClient<AiFeedbackService>();
         services.AddScoped<DataSeeder>();
+
+        // Email: real SES in production, console logger for local dev.
+        // Defaults to "console" so local dev needs zero email setup.
+        if (string.Equals(config["Email:Provider"], "ses", StringComparison.OrdinalIgnoreCase))
+        {
+            var region = config["AWS:Region"] ?? "ap-southeast-2";
+            services.AddSingleton<IAmazonSimpleEmailServiceV2>(_ =>
+                new AmazonSimpleEmailServiceV2Client(Amazon.RegionEndpoint.GetBySystemName(region)));
+            services.AddScoped<IEmailService, SesEmailService>();
+        }
+        else
+        {
+            services.AddScoped<IEmailService, ConsoleEmailService>();
+        }
 
         return services;
     }

@@ -59,8 +59,9 @@ const router = createBrowserRouter([
   },
 
   // ── Auth pages (no layout) ───────────────────────────────────────────────
-  { path: "/login",    ...lazy(() => import("./features/auth/LoginPage"),    "LoginPage") },
-  { path: "/register", ...lazy(() => import("./features/auth/RegisterPage"), "RegisterPage") },
+  { path: "/login",        ...lazy(() => import("./features/auth/LoginPage"),       "LoginPage") },
+  { path: "/register",     ...lazy(() => import("./features/auth/RegisterPage"),    "RegisterPage") },
+  { path: "/verify-email", ...lazy(() => import("./features/auth/VerifyEmailPage"), "VerifyEmailPage") },
 
 ]);
 

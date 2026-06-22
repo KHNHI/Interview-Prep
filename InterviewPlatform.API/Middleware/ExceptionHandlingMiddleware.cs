@@ -35,6 +35,7 @@ public class ExceptionHandlingMiddleware
             ValidationException ve => (HttpStatusCode.BadRequest,
                 string.Join("; ", ve.Errors.Select(e => e.ErrorMessage))),
             NotFoundException nfe => (HttpStatusCode.NotFound, nfe.Message),
+            EmailNotVerifiedException enve => (HttpStatusCode.Forbidden, enve.Message),
             UnauthorizedException ue => (HttpStatusCode.Unauthorized, ue.Message),
             QuotaExceededException qe => (HttpStatusCode.TooManyRequests, qe.Message),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
