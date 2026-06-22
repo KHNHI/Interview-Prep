@@ -8,7 +8,10 @@ import { Link, useNavigate } from "react-router-dom";
 const schema = z.object({
   name:     z.string().min(2, "At least 2 characters"),
   email:    z.string().email("Enter a valid email"),
-  password: z.string().min(6, "At least 6 characters"),
+  password: z.string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "Add at least one uppercase letter")
+    .regex(/[^A-Za-z0-9]/, "Add at least one special character"),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -78,7 +81,7 @@ export function RegisterPage() {
 
             <div>
               <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Password</label>
-              <input {...register("password")} type="password" placeholder="At least 6 characters"
+              <input {...register("password")} type="password" placeholder="8+ chars, 1 uppercase, 1 symbol"
                 className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
               {errors.password && <p className="text-[11.5px] text-ink-3 mt-1">{errors.password.message}</p>}
             </div>

@@ -1,10 +1,12 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using InterviewPlatform.Application.Common.Behaviours;
 using InterviewPlatform.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -71,6 +73,32 @@ builder.Services.AddCors(opts => opts.AddDefaultPolicy(policy =>
 
 builder.Services.AddHealthChecks();
 
+// Rate limiting — brute-force protection for the auth endpoints.
+// "auth" policy: max 5 requests per minute PER CLIENT IP. The IP is the real
+// client IP because UseForwardedHeaders (below) reads X-Forwarded-For from Caddy.
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window      = TimeSpan.FromMinutes(1),
+                QueueLimit  = 0
+            }));
+
+    // Return a JSON 429 consistent with the rest of the API.
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode  = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"success\":false,\"error\":\"Too many attempts. Please try again in a minute.\",\"data\":null}",
+            token);
+    };
+});
+
 // Trust X-Forwarded-* from the reverse proxy (Caddy/CloudFront) so the app sees
 // the real client IP and https scheme. The container port is only reachable from
 // the proxy on the same Docker network, so trusting all proxies here is safe.
@@ -93,6 +121,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<InterviewPlatform.API.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors();
+app.UseRateLimiter();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

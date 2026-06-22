@@ -2,11 +2,13 @@ using InterviewPlatform.Application.Features.Auth.Commands.Login;
 using InterviewPlatform.Application.Features.Auth.Commands.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InterviewPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("auth")]   // 5 requests/min per IP on register + login
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
