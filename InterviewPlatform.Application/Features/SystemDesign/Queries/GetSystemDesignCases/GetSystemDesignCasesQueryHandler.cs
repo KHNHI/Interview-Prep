@@ -1,4 +1,5 @@
 using InterviewPlatform.Application.Interfaces;
+using InterviewPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,8 +17,10 @@ public class GetSystemDesignCasesQueryHandler
     {
         var query = _db.SystemDesignCases.AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(request.Difficulty))
-            query = query.Where(c => c.Difficulty.ToString().ToLower() == request.Difficulty.ToLower());
+        // Compare the enum directly (EF can translate this to SQL; .ToString() can't).
+        if (!string.IsNullOrWhiteSpace(request.Difficulty)
+            && Enum.TryParse<Difficulty>(request.Difficulty, ignoreCase: true, out var difficulty))
+            query = query.Where(c => c.Difficulty == difficulty);
 
         return await query
             .OrderBy(c => c.OrderIndex)

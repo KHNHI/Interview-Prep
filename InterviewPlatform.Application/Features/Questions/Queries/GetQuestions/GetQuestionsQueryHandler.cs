@@ -1,4 +1,5 @@
 using InterviewPlatform.Application.Interfaces;
+using InterviewPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,8 +18,10 @@ public class GetQuestionsQueryHandler : IRequestHandler<GetQuestionsQuery, GetQu
         if (!string.IsNullOrWhiteSpace(request.Category))
             query = query.Where(q => q.Category == request.Category);
 
-        if (!string.IsNullOrWhiteSpace(request.Difficulty))
-            query = query.Where(q => q.Difficulty.ToString().ToLower() == request.Difficulty.ToLower());
+        // Compare the enum directly (EF can translate this to SQL; .ToString() can't).
+        if (!string.IsNullOrWhiteSpace(request.Difficulty)
+            && Enum.TryParse<Difficulty>(request.Difficulty, ignoreCase: true, out var difficulty))
+            query = query.Where(q => q.Difficulty == difficulty);
 
         var total = await query.CountAsync(ct);
 
