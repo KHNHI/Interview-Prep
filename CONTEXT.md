@@ -81,7 +81,7 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 
 ### Domain Entities
 
-- `User` — email, passwordHash, planTier (Free/Pro/Team), locale (en/vi), stripeCustomerId
+- `User` — email, passwordHash, planTier (Free/Pro/Team), locale (en/vi), stripeCustomerId, **isEmailVerified, emailVerificationToken, emailVerificationTokenExpiresAt**
 - `Question` — category, titleEn/Vi, contentEn/Vi, difficulty, tags[], isPro, orderIndex
 - `QuizQuestion` — **standalone MCQ question** (nullable QuestionId link to Q&A bank):
   - `Category`, `Difficulty`, `TitleEn`, `TitleVi`, `ContextEn`, `CodeSnippet`
@@ -99,6 +99,7 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 - `20260529102836_Init` — initial schema
 - `StandaloneQuizQuestion` — makes QuizQuestion standalone (nullable FK + new fields)
 - `20260601152136_SystemDesignReadingContent` — adds reading-content fields to SystemDesignCase (Summary, OverviewEn, HighLevelDesignEn, DeepDiveEn, TradeoffsEn, Tags, OrderIndex)
+- `20260622130913_EmailVerification` — adds User email-verification fields; **backfills existing users to verified** so they aren't locked out
 
 ### Application Layer — Implemented CQRS
 
@@ -112,11 +113,16 @@ ExceptionHandlingMiddleware → UseCors() → UseHttpsRedirection()
 | `GetRadarQuery` | handler | Groups attempts by QuizQuestion.Category → correct rate per category |
 | `GetFlashcardsQuery` | handler | Returns up to 20 cards due today; deduped by question (most recent attempt); new cards first |
 | `ReviewFlashcardCommand` | handler | Applies SM-2 algorithm to UserQuizAttempt, updates NextReviewAt |
-| `RegisterCommand` | handler | BCrypt hash, return JWT |
-| `LoginCommand` | handler | Verify credentials, return JWT |
+| `RegisterCommand` | handler | BCrypt hash, create **unverified** user, email a 24h verification link, return `RegisterResult` (no auto-login) |
+| `RegisterCommandValidator` | — | FluentValidation: password ≥8 chars + ≥1 uppercase + ≥1 special; email/name rules (**server-side**, not just frontend) |
+| `LoginCommand` | handler | Verify credentials; **throws EmailNotVerifiedException (403) if not verified**; else return JWT |
+| `VerifyEmailCommand` | handler | Validates token (24h), marks verified, returns JWT (auto-login on verify) |
+| `ResendVerificationCommand` | handler | Regenerates token + re-sends email; silent success to avoid account enumeration |
 | `GetSystemDesignCasesQuery` | handler | Lists study cases (id, title, difficulty, summary, tags, isPro); optional difficulty filter |
 | `GetSystemDesignCaseByIdQuery` | handler | Returns `SystemDesignCaseDetailDto` with all Markdown sections |
 | `ValidationBehaviour<TRequest,TResponse>` | — | FluentValidation pipeline |
+
+> **Difficulty filter fix:** query handlers compare the `Difficulty` **enum** directly (`q.Difficulty == parsed`) — `enum.ToString()` in a `Where` can't be translated to SQL and threw 500s.
 
 ### SM-2 Algorithm (ReviewFlashcardCommandHandler)
 ```
@@ -134,6 +140,10 @@ nextReviewAt = today + intervalDays
 - `CacheService` — Redis get/set/increment/expire wrapper
 - `QuotaService` — daily limit per feature per user (Vietnam UTC+7 reset)
 - `AiFeedbackService` — Anthropic Claude API (claude-sonnet-4-6)
+- `IEmailService` — sends verification emails. Implementation chosen by `Email:Provider`:
+  - `SmtpEmailService` (MailKit) — **used in prod via Brevo** (works with any SMTP: SendGrid/Gmail/etc.)
+  - `SesEmailService` (AWS SES) — built but not used (SES production access was rejected)
+  - `ConsoleEmailService` — local dev; logs the verification link, zero setup (the default)
 - `DataSeeder` — seeds on startup; skips if data already exists; reads JSON from `SeedData/`
 
 ### Seed Data (`InterviewPlatform.API/SeedData/`)
@@ -156,7 +166,7 @@ nextReviewAt = today + intervalDays
 
 | Controller | Endpoints | Auth |
 |---|---|---|
-| `AuthController` | `POST /api/auth/register`, `POST /api/auth/login` | Public |
+| `AuthController` | `POST /api/auth/register`, `login`, `verify-email`, `resend-verification` | Public, **rate-limited 5/min per IP** (`[EnableRateLimiting("auth")]`) |
 | `QuestionsController` | `GET /api/questions?category&difficulty&lang&page&pageSize` | Public |
 | `QuestionsController` | `GET /api/questions/{id}?lang` | Public |
 | `QuizController` | `GET /api/quiz/questions?category&difficulty&count` | Public |
@@ -284,8 +294,9 @@ src/
 │       └── MarkdownRenderer.tsx ← Shared MD renderer (## headers, **bold**, code, lists, tables); used by Questions + System Design
 ├── features/
 │   ├── landing/LandingPage.tsx
-│   ├── auth/LoginPage.tsx               ← Sets localStorage["access_token"] on login
-│   ├── auth/RegisterPage.tsx
+│   ├── auth/LoginPage.tsx               ← Sets token on login; handles 403 (unverified) with resend
+│   ├── auth/RegisterPage.tsx            ← On success shows "check your email" (no auto-login) + resend
+│   ├── auth/VerifyEmailPage.tsx         ← /verify-email?token=…; verifies + auto-logs in; error state offers resend
 │   ├── dashboard/DashboardPage.tsx      ← Connected to GET /api/progress/dashboard
 │   ├── questions/QuestionsPage.tsx      ← Connected to GET /api/questions
 │   ├── questions/QuestionDetailPage.tsx ← Connected to GET /api/questions/:id
@@ -307,17 +318,18 @@ src/
 PublicLayout    →  /
 Layout          →  /questions, /questions/:id, /quiz, /system-design, /system-design/guide, /system-design/:id, /pricing
 ProtectedLayout →  /dashboard, /flashcard, /progress
-(no layout)     →  /login, /register
+(no layout)     →  /login, /register, /verify-email
 ```
 
 > **Important**: `/quiz` is in the public `Layout` (NOT ProtectedLayout) — guests can take quizzes with a 3-attempt limit.
 > **System Design** is a read-only study reference (all routes public). `/system-design/guide` is static; the list + detail pages are API-driven. Route ordering: `guide` (static) is ranked above `:id` (dynamic) by React Router.
 
 ### Auth Token Storage
-- Login page sets **two** keys on successful login:
+- **Login** and **verify-email** set **two** keys on success (register no longer logs in — email must be verified first):
   - `localStorage["access_token"]` — read by Axios request interceptor
   - Zustand store via `setAuth()` — persisted automatically to `localStorage["auth-store"]`
-- On 401: Axios interceptor removes both keys and does `window.location.href = "/login"`
+- On 401 (non-`/auth/` endpoints): Axios interceptor removes both keys and does `window.location.href = "/login"`
+- Login 403 = email not verified → LoginPage shows a resend option (not a redirect)
 - `quiz.api.ts submit()` uses raw `fetch` (not Axios) to avoid 401 bouncing user off results page
 
 ---
@@ -384,9 +396,24 @@ SetupScreen → QuizScreen → ResultsScreen
 }
 ```
 
-### Frontend (`.env.development`)
+### Email config (prod, in the box's `/opt/interviewprep/.env`)
 ```
-VITE_API_URL=http://localhost:5000
+Email__Provider=smtp                       # smtp | ses | console (default)
+Email__FromAddress=noreply@lazyndev.io.vn  # a Brevo-verified sender
+Email__FromName=InterviewPrep
+App__FrontendBaseUrl=https://lazyndev.io.vn  # used to build the verification link
+# SMTP (Brevo — free 300/day):
+Email__Smtp__Host=smtp-relay.brevo.com
+Email__Smtp__Port=587
+Email__Smtp__User=<brevo SMTP login>       # from Brevo → SMTP & API → SMTP tab
+Email__Smtp__Password=<brevo SMTP key>     # the SMTP key (NOT an API key / account password)
+```
+> ⚠️ Config keys use **double underscore** `__` (maps to nested `:`). Single underscore silently fails.
+> Locally, leave `Email__Provider` unset → console mode logs the link (no email setup needed).
+
+### Frontend (`.env.development` / `.env.production`)
+```
+VITE_API_URL=http://localhost:5000            # prod: https://api.lazyndev.io.vn
 VITE_APP_NAME=InterviewPrep
 VITE_STRIPE_PUBLIC_KEY=pk_test_...
 ```
@@ -432,17 +459,19 @@ docker compose exec postgres psql -U dev_user -d interview_platform -c "\dt"
 
 ### Recent Commits
 ```
-9b9b7b9  Cache-bust favicon URL so logo updates show immediately
+4524654  Add SMTP email provider (Brevo/SendGrid/Gmail)
+8bd9d8c  Add email verification on registration
+b5a36bd  Skip deploy on docs/terraform/markdown-only pushes
+b23be61  Harden auth: password policy + rate limiting
+e5de7c9  Fix difficulty filter: compare enum instead of ToString()
+9f221f5  Update CONTEXT.md: AWS deployment + CI/CD live
+9b9b7b9  Cache-bust favicon URL
 e6bdd28  Deploy API via SSM Run Command instead of SSH
-af5b504  Replace Vite favicon with InterviewPrep logo
 441628f  Add AWS deployment + CI/CD scaffolding
 7bc7635  implement the system design feature
-67df55a  fix the redirect auth, connect the flashcard feature
-f94f3be  fix quiz submit (guest), redesign sidebar, dashboard real data
-b2dd174  add quizz feature
 ```
 
-> **`docs/` is git-ignored** (deploy runbook + interview prep are kept local only).
+> **`docs/` and `terraform/` are git-ignored / uncommitted** (deploy runbook + interview prep kept local; terraform scaffold parked). `deploy.yml` has `paths-ignore` so docs/terraform/markdown-only pushes don't trigger a deploy.
 
 ### Recent work (all committed to `main`; deployed live)
 
@@ -479,6 +508,21 @@ b2dd174  add quizz feature
 - `systemDesign.api.ts`, `SystemDesignPage.tsx` (list), `SystemDesignGuidePage.tsx` (framework), `SystemDesignDetailPage.tsx` (detail), `router.tsx` (detail moved to public Layout, `/system-design/guide` added)
 - Mock-interview UI/entity fields preserved (unused) for a future practice mode
 - Incidental: removed dead `App.tsx` Vite-template code + unused var in `LandingPage.tsx` (were breaking `npm run build`)
+
+**Auth hardening:**
+- `RegisterCommandValidator` (FluentValidation) — password ≥8 + ≥1 uppercase + ≥1 special, enforced **server-side** (there were no backend validators before); matching Zod rules on `RegisterPage`
+- Rate limiting (.NET 8 `AddRateLimiter`) — **5 req/min per client IP** on the auth endpoints, JSON 429
+- Bug fix: difficulty filter compared `enum.ToString()` in a `Where` → untranslatable → 500; now compares the enum
+
+**Email verification on registration:**
+- `User` + migration `EmailVerification` (backfills existing users verified)
+- `IEmailService` → `SmtpEmailService` (MailKit) / `SesEmailService` / `ConsoleEmailService`, chosen by `Email:Provider`
+- Register → creates unverified user + emails 24h link (no auto-login); Login → 403 until verified
+- `verify-email` (auto-login on success) + `resend-verification` endpoints
+- Frontend: RegisterPage "check your email" screen, `/verify-email` page, LoginPage 403-handling with resend
+- **Prod email = Brevo SMTP** (free 300/day). SES was built but AWS **rejected production access**, and its sandbox only emails verified addresses — so switched to Brevo. Brevo needed the EC2 Elastic IP added to **Authorized IPs**.
+
+**Known rough edge (not yet fixed):** register saves the user *before* sending the email, so a failed send leaves a stuck unverified account ("already registered" on retry). Planned fix: make the email send **non-fatal** + treat re-register of an unverified email as a resend.
 
 **AWS deployment + CI/CD (live):**
 - API: `/health` endpoint, `UseForwardedHeaders` (proxy-aware), comma-separated multi-origin CORS, migrate-on-startup (`db.Database.MigrateAsync()`)
@@ -518,6 +562,8 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 - [x] System Design — reading reference (framework guide + 4 worked-example cases, API-driven)
 - [x] Deploy to AWS — EC2 + Docker Compose + Caddy, RDS, S3 + CloudFront (live)
 - [x] CI/CD pipeline — GitHub Actions, OIDC, SSM-based deploy
+- [x] Auth hardening — password policy + rate limiting
+- [x] Email verification on registration (live, via Brevo SMTP)
 - [ ] Stripe checkout
 
 ### Phase 2
@@ -528,14 +574,15 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 
 ### Technical Debt
 - Delete `Class1.cs` placeholder files in Domain/Application/Infrastructure
-- Add rate limiting on auth endpoints (brute force protection)
+- **Make registration email send non-fatal** + treat re-register of an unverified email as a resend (avoids stuck "already registered" accounts)
 - Store refresh tokens in DB (currently not persisted — 60 min JWT only)
 - Move prod secrets from on-box `.env` to AWS Secrets Manager / SSM Parameter Store
 - Write actual unit tests (stubs exist, no tests written)
 - Add error boundaries in React
 - `DashboardPage` "Continue Learning" card is hardcoded
+- No admin UI to delete users — done via `psql` on the box (see §15)
 - **Prod hardening:** add monitoring/alerting; move Redis to ElastiCache; ALB + 2+ instances for zero-downtime (then move migrations out of startup); the deploy auto-migrates on startup (fine for a single instance only)
-- ✅ Done: `/health` endpoint; HTTPS (Caddy + CloudFront); SSM deploy (no inbound port 22)
+- ✅ Done: `/health`; HTTPS; SSM deploy (no port 22); rate limiting; password policy; email verification
 
 ---
 
@@ -600,7 +647,8 @@ Users ─ https://lazyndev.io.vn ──────→ CloudFront ──→ S3  
 | Database | RDS PostgreSQL (private; inbound 5432 only from EC2 security group) |
 | Cache | Redis container on the box (ElastiCache later) |
 | Image registry | ECR (`interviewprep-api`) |
-| DNS | apex/`www` → CloudFront, `api` → EC2 Elastic IP |
+| DNS | Route 53 hosted zone; apex/`www` → CloudFront, `api` → EC2 Elastic IP (`13.55.32.102`) |
+| Email | **Brevo SMTP** (free 300/day) via `SmtpEmailService`; sender = `noreply@lazyndev.io.vn` |
 
 ### CI/CD (GitHub Actions)
 - **`ci.yml`** — on every PR/push: backend build + unit tests, frontend typecheck + build.
@@ -619,7 +667,21 @@ Users ─ https://lazyndev.io.vn ──────→ CloudFront ──→ S3  
 Just `git push origin main` → the pipeline does the rest. Rollback = re-point `ECR_IMAGE`
 in the box's `/opt/interviewprep/.env` to an older SHA tag and `docker compose up -d`.
 
-### Notes / gotchas hit during setup
+### Email (Brevo SMTP)
+- Set on the box `.env`: `Email__Provider=smtp`, `Email__Smtp__Host=smtp-relay.brevo.com`, `Port=587`, `User` = Brevo SMTP login, `Password` = Brevo **SMTP key** (not an API key), `Email__FromAddress` = a Brevo-verified sender, `App__FrontendBaseUrl=https://lazyndev.io.vn`.
+- Brevo **"Authorized IPs"** must include the EC2 Elastic IP (`13.55.32.102`) or SMTP returns `525 5.7.1 Unauthorized IP`.
+- SES was set up first but AWS **rejected production access** (sandbox only emails verified addresses) → switched to Brevo. `SesEmailService` remains in code (`Email__Provider=ses` to use it).
+
+### Managing prod data (no admin UI yet)
+- Delete a user: on the box via Session Manager, run `psql` in a throwaway `postgres:16-alpine` container against RDS (reads host/password from `.env`) → `DELETE FROM "Users" WHERE "Email"='...';`.
+
+### DNS gotchas hit during setup
+- Domain registrar (PA Vietnam) had a **split delegation** (Route 53 + PA Vietnam NS) → intermittent `NXDOMAIN`. Fixed by setting the registrar's nameservers to **only the 4 Route 53 NS**.
+- All DNS records (apex/www/api aliases, SES/Brevo DKIM CNAMEs, ACM validation) live in the **Route 53** hosted zone — not the registrar panel.
+
+### Access / other gotchas
+- SSH (port 22) is restricted to owner IP and rotates; use **SSM Session Manager** for a shell (no SSH needed).
+- Config keys use **double underscore** (`Email__Smtp__Host`) — single underscore silently fails.
 - Migrations run on container startup (fine for one instance; move to a CI step if scaling out).
 - The box's `/opt/interviewprep/.env` (chmod 600) holds prod secrets — never committed.
 - Favicon is cache-busted via `?v=2` in `index.html` (browsers cache favicons hard).
