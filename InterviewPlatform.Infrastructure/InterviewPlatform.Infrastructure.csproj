@@ -13,6 +13,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="AWSSDK.SimpleEmailV2" Version="3.7.*" />
+    <PackageReference Include="MailKit" Version="4.*" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.*" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.17" />
     <PackageReference Include="Stripe.net" Version="51.2.0" />
