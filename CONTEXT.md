@@ -522,7 +522,7 @@ e6bdd28  Deploy API via SSM Run Command instead of SSH
 - Frontend: RegisterPage "check your email" screen, `/verify-email` page, LoginPage 403-handling with resend
 - **Prod email = Brevo SMTP** (free 300/day). SES was built but AWS **rejected production access**, and its sandbox only emails verified addresses — so switched to Brevo. Brevo needed the EC2 Elastic IP added to **Authorized IPs**.
 
-**Known rough edge (not yet fixed):** register saves the user *before* sending the email, so a failed send leaves a stuck unverified account ("already registered" on retry). Planned fix: make the email send **non-fatal** + treat re-register of an unverified email as a resend.
+**Resilience (fixed):** verification email send is **non-fatal** (logged, not thrown) — a provider hiccup no longer 500s registration or leaves a stuck account. Re-registering an **unverified** email updates the pending account + re-issues a link (instead of "already registered"). Applies to both register and resend.
 
 **AWS deployment + CI/CD (live):**
 - API: `/health` endpoint, `UseForwardedHeaders` (proxy-aware), comma-separated multi-origin CORS, migrate-on-startup (`db.Database.MigrateAsync()`)
@@ -574,7 +574,6 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 
 ### Technical Debt
 - Delete `Class1.cs` placeholder files in Domain/Application/Infrastructure
-- **Make registration email send non-fatal** + treat re-register of an unverified email as a resend (avoids stuck "already registered" accounts)
 - Store refresh tokens in DB (currently not persisted — 60 min JWT only)
 - Move prod secrets from on-box `.env` to AWS Secrets Manager / SSM Parameter Store
 - Write actual unit tests (stubs exist, no tests written)
