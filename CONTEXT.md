@@ -576,7 +576,7 @@ Wire the Pricing page CTAs to actual Stripe checkout:
 - Delete `Class1.cs` placeholder files in Domain/Application/Infrastructure
 - Store refresh tokens in DB (currently not persisted — 60 min JWT only)
 - Move prod secrets from on-box `.env` to AWS Secrets Manager / SSM Parameter Store
-- Write actual unit tests (stubs exist, no tests written)
+- Expand test coverage — **23 unit tests exist** (SM-2, password validator, login/verify handlers, difficulty filter; EF InMemory + Moq); still no integration tests (Testcontainers stub) or frontend tests (no Vitest)
 - Add error boundaries in React
 - `DashboardPage` "Continue Learning" card is hardcoded
 - No admin UI to delete users — done via `psql` on the box (see §15)
