@@ -38,7 +38,7 @@ public class SmtpEmailService : IEmailService
         message.Subject = subject;
         message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
-        using var client = new SmtpClient();
+        using var client = new SmtpClient { Timeout = 10000 }; // 10s — fail fast instead of hanging ~2 min
         await client.ConnectAsync(_host, _port, SecureSocketOptions.StartTls, ct);
         if (!string.IsNullOrEmpty(_user))
             await client.AuthenticateAsync(_user, _password, ct);
