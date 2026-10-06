@@ -45,6 +45,11 @@ public static class DependencyInjection
         {
             services.AddScoped<IEmailService, SmtpEmailService>();
         }
+        else if (emailProvider == "brevo")
+        {
+            // Brevo over HTTPS — works on PaaS that block SMTP ports (Railway/Render).
+            services.AddHttpClient<IEmailService, BrevoApiEmailService>();
+        }
         else
         {
             services.AddScoped<IEmailService, ConsoleEmailService>();
