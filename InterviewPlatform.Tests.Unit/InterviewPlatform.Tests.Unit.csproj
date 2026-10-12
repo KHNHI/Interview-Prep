@@ -29,4 +29,9 @@
     <ProjectReference Include="..\InterviewPlatform.Infrastructure\InterviewPlatform.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\InterviewPlatform.API\SeedData\questions-*.json"
+          Link="TestSeedData\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -40,13 +40,14 @@ public class DataSeeder
 
     // ── Q&A bank ────────────────────────────────────────────────────────────
 
-    private async Task SeedQuestionsAsync(string seedDir)
+    internal async Task SeedQuestionsAsync(string seedDir)
     {
-        if (await _db.Questions.AnyAsync())
-        {
-            _logger.LogInformation("Q&A questions already seeded — skipping.");
-            return;
-        }
+        // Append new seed entries on existing installations without replacing
+        // records referenced by progress. Category + title identifies a seed entry;
+        // renaming either should therefore be treated as adding a new question.
+        var existing = await _db.Questions.AsNoTracking()
+            .Select(q => new { q.Category, q.TitleEn }).ToListAsync();
+        var known = existing.Select(q => QuestionKey(q.Category, q.TitleEn)).ToHashSet();
 
         var questions = new List<Question>();
         foreach (var file in Directory.GetFiles(seedDir, "questions-*.json").OrderBy(f => f))
@@ -56,7 +57,11 @@ public class DataSeeder
                 var json = await File.ReadAllTextAsync(file);
                 var dtos = JsonSerializer.Deserialize<List<QuestionSeedDto>>(json, JsonOpts);
                 if (dtos is null) continue;
-                questions.AddRange(dtos.Select(MapQuestion));
+                foreach (var dto in dtos)
+                {
+                    if (known.Add(QuestionKey(dto.Category, dto.TitleEn)))
+                        questions.Add(MapQuestion(dto));
+                }
                 _logger.LogInformation("Loaded {Count} questions from {File}", dtos.Count, Path.GetFileName(file));
             }
             catch (Exception ex)
@@ -65,12 +70,15 @@ public class DataSeeder
             }
         }
 
-        if (questions.Count == 0) { _logger.LogWarning("No Q&A questions found."); return; }
+        if (questions.Count == 0) { _logger.LogInformation("No new Q&A questions to seed."); return; }
 
         _db.Questions.AddRange(questions);
         await _db.SaveChangesAsync();
         _logger.LogInformation("Seeded {Total} Q&A questions.", questions.Count);
     }
+
+    private static (string Category, string Title) QuestionKey(string category, string title) =>
+        (category.Trim().ToUpperInvariant(), title.Trim().ToUpperInvariant());
 
     // ── Quiz MCQ bank ────────────────────────────────────────────────────────
 

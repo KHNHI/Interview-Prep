@@ -1,0 +1,912 @@
+[
+  {
+    "category": "DSA",
+    "subcategory": "Two pointers",
+    "titleEn": "When should you use the two-pointer technique?",
+    "difficulty": "Easy",
+    "tags": [
+      "DSA",
+      "Two pointers"
+    ],
+    "isPro": false,
+    "orderIndex": 101,
+    "contentEn": "## Short Answer\n\nTwo pointers track positions in an array or string. If each pointer moves in only one direction, a scan can take O(n) time and O(1) extra space. The technique is useful when sorting or a monotonic condition lets you discard candidates safely.\n\n## Example\n\nFor a sorted array, compare the sum of the leftmost and rightmost values with a target. Move the left pointer if the sum is too small, otherwise move the right pointer.\n\n## Interview Pitfall\n\nThe same rule does not work on an unsorted array. Sorting first costs O(n log n) and may change original indices."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Sliding window",
+    "titleEn": "How does a sliding window solve contiguous-subarray problems?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Sliding window"
+    ],
+    "isPro": false,
+    "orderIndex": 102,
+    "contentEn": "## Short Answer\n\nMaintain information about a contiguous range and update it when either boundary moves. A fixed window can keep a rolling sum; a variable window expands and shrinks according to a validity condition. When boundaries only move forward, the total number of moves is linear.\n\n## Example\n\nTo find the longest substring without repeated characters, keep character counts and move the left boundary until the newest duplicate disappears.\n\n## Interview Pitfall\n\nNot every condition is monotonic. A positive-number sum window cannot be used unchanged when negative values are allowed."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Prefix sums",
+    "titleEn": "What is a prefix sum and when is it useful?",
+    "difficulty": "Easy",
+    "tags": [
+      "DSA",
+      "Prefix sums"
+    ],
+    "isPro": false,
+    "orderIndex": 103,
+    "contentEn": "## Short Answer\n\nA prefix array stores cumulative totals. With prefix[0] = 0 and prefix[i + 1] = prefix[i] + values[i], the sum of the half-open interval [l, r) is prefix[r] - prefix[l]. Building takes O(n); each range-sum query takes O(1).\n\n## Example\n\nFor [2, 3, 5], the prefix array is [0, 2, 5, 10]. The sum of indices 1 through 2 is prefix[3] - prefix[1] = 8.\n\n## Interview Pitfall\n\nUse a numeric type large enough for the total. Updating many elements makes a static prefix array expensive; consider a Fenwick tree."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Heaps",
+    "titleEn": "What is a heap and how can it find the top K elements?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Heaps"
+    ],
+    "isPro": false,
+    "orderIndex": 104,
+    "contentEn": "## Short Answer\n\nA binary heap is a complete binary tree with a parent-child ordering rule. Its root gives a minimum or maximum in O(1); insert and remove-root take O(log n). It is partially ordered, not fully sorted.\n\n## Example\n\nKeep a min-heap of size K while scanning values. Replace the root when a larger value arrives. This finds the largest K values in O(n log K) time and O(K) space.\n\n## Interview Pitfall\n\nA heap does not support binary search or return arbitrary ranks cheaply. For one maximum, a simple linear scan is better."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Recursion",
+    "titleEn": "How do you reason about the time and space cost of recursion?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Recursion"
+    ],
+    "isPro": false,
+    "orderIndex": 105,
+    "contentEn": "## Short Answer\n\nIdentify the base case, the number and size of recursive calls, and the work outside them. Space includes the maximum active call stack, not just explicitly allocated arrays. A decreasing input measure helps establish termination.\n\n## Example\n\nA recursive binary search does O(log n) work and uses O(log n) stack space. An iterative version uses O(1) extra space.\n\n## Interview Pitfall\n\nCounting recursion depth alone misses branching. Naive Fibonacci has linear depth but exponential work because it repeats subproblems."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Backtracking",
+    "titleEn": "What is backtracking and how is it different from dynamic programming?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Backtracking"
+    ],
+    "isPro": false,
+    "orderIndex": 106,
+    "contentEn": "## Short Answer\n\nBacktracking explores candidate decisions, abandons invalid partial solutions, and undoes choices before exploring another branch. Dynamic programming stores reusable results for overlapping subproblems. Backtracking is often useful when you must enumerate solutions.\n\n## Example\n\nFor permutations, choose an unused element, recurse, then mark it unused again. Prune invalid prefixes as soon as possible.\n\n## Interview Pitfall\n\nUndo changes reliably. Pruning improves many inputs but does not automatically turn an exponential search into a polynomial algorithm."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Greedy algorithms",
+    "titleEn": "How can you justify that a greedy algorithm is correct?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Greedy algorithms"
+    ],
+    "isPro": false,
+    "orderIndex": 107,
+    "contentEn": "## Short Answer\n\nA greedy algorithm commits to a local choice without reconsidering it. Correctness needs a proof, commonly an exchange argument showing an optimal solution can be changed to include the greedy choice without becoming worse.\n\n## Example\n\nTo select the most non-overlapping intervals, choose the interval that finishes earliest, then repeat among compatible intervals.\n\n## Interview Pitfall\n\nChoosing the shortest interval is not the same strategy and can fail. Examples alone are not a proof of correctness."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Graphs",
+    "titleEn": "What is topological sorting and how can it detect cycles?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Graphs"
+    ],
+    "isPro": false,
+    "orderIndex": 108,
+    "contentEn": "## Short Answer\n\nA topological order lists every directed edge from an earlier vertex to a later vertex. It exists only for a directed acyclic graph. Kahn's algorithm repeatedly removes vertices with zero incoming edges and updates their neighbors.\n\n## Example\n\nUse it to schedule build tasks with dependencies. If fewer than V vertices are removed, the graph contains a cycle. Runtime is O(V + E).\n\n## Interview Pitfall\n\nAn order is not necessarily unique. An undirected cycle detector is not a replacement for directed-cycle detection."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Union find",
+    "titleEn": "What problems does union-find solve?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Union find"
+    ],
+    "isPro": false,
+    "orderIndex": 109,
+    "contentEn": "## Short Answer\n\nUnion-find maintains disjoint sets using a representative for each set. Find returns the representative; union merges sets. Path compression and union by rank or size make operations nearly constant amortized time.\n\n## Example\n\nProcess undirected edges: if both endpoints already have the same representative, adding that edge creates a cycle; otherwise union them.\n\n## Interview Pitfall\n\nUnion-find does not directly give the actual path between nodes and is not a general solution for directed-cycle detection."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Tries",
+    "titleEn": "What is a trie and what are its trade-offs?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Tries"
+    ],
+    "isPro": false,
+    "orderIndex": 110,
+    "contentEn": "## Short Answer\n\nA trie stores keys by successive characters, sharing common prefixes. Searching or inserting a word of length L takes O(L), assuming efficient child lookup. It is useful for prefix search and autocomplete.\n\n## Example\n\nA prefix lookup for 'inter' reaches the prefix node, then explores descendants to collect suggestions. Ranking those suggestions is a separate problem.\n\n## Interview Pitfall\n\nA node with a large fixed alphabet wastes memory when most children are absent. Hash maps or compressed edges reduce this cost."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Intervals",
+    "titleEn": "How do you merge overlapping intervals?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Intervals"
+    ],
+    "isPro": false,
+    "orderIndex": 111,
+    "contentEn": "## Short Answer\n\nSort intervals by their start, then scan them. Extend the current merged interval when the next interval overlaps; otherwise emit the current interval and start a new one. Sorting dominates at O(n log n).\n\n## Example\n\nThe intervals [1, 3], [2, 6], and [8, 10] become [1, 6] and [8, 10]. The scan only needs the last merged interval.\n\n## Interview Pitfall\n\nDecide whether touching endpoints overlap. Closed intervals and half-open intervals can require different boundary comparisons."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Monotonic stacks",
+    "titleEn": "What is a monotonic stack and when should you use it?",
+    "difficulty": "Medium",
+    "tags": [
+      "DSA",
+      "Monotonic stacks"
+    ],
+    "isPro": false,
+    "orderIndex": 112,
+    "contentEn": "## Short Answer\n\nA monotonic stack maintains values in increasing or decreasing order. When a new value violates the order, pop elements and resolve the relationship being searched for. Each element is pushed and popped at most once.\n\n## Example\n\nFor next-greater-element queries, keep unresolved indices in decreasing value order. A larger incoming value answers the popped indices in O(n) total time.\n\n## Interview Pitfall\n\nStore indices when you need distances or must distinguish duplicate values. Carefully choose strict versus non-strict comparisons."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Shortest paths",
+    "titleEn": "When is Dijkstra's algorithm appropriate and when does it fail?",
+    "difficulty": "Hard",
+    "tags": [
+      "DSA",
+      "Shortest paths"
+    ],
+    "isPro": false,
+    "orderIndex": 113,
+    "contentEn": "## Short Answer\n\nDijkstra finds shortest paths from one source when all edge weights are nonnegative. It repeatedly settles the vertex with the smallest known distance. A binary-heap implementation typically costs O((V + E) log V).\n\n## Example\n\nFor a road graph with nonnegative travel times, relax adjacent edges and update the priority queue. Ignore stale entries when a better distance was already recorded.\n\n## Interview Pitfall\n\nNegative edges invalidate the greedy settling rule. Use an appropriate algorithm such as Bellman-Ford; reachable negative cycles may mean no finite shortest path exists."
+  },
+  {
+    "category": "DSA",
+    "subcategory": "Data structures",
+    "titleEn": "How can you implement an LRU cache with O(1) operations?",
+    "difficulty": "Hard",
+    "tags": [
+      "DSA",
+      "Data structures"
+    ],
+    "isPro": false,
+    "orderIndex": 114,
+    "contentEn": "## Short Answer\n\nCombine a hash map for key lookup with a doubly linked list ordered by recent use. Get and update move a node to the front; inserting beyond capacity removes the tail and its hash entry. Expected operation time is O(1).\n\n## Example\n\nWith capacity two, access A after inserting A and B. Inserting C then evicts B, the least recently used key.\n\n## Interview Pitfall\n\nThe map and list must stay consistent. Concurrent access needs synchronization, and eviction alone does not implement expiration or memory-size limits."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "HTTP",
+    "titleEn": "What is the difference between GET, POST, PUT and PATCH?",
+    "difficulty": "Easy",
+    "tags": [
+      "Networking",
+      "HTTP"
+    ],
+    "isPro": false,
+    "orderIndex": 101,
+    "contentEn": "## Short Answer\n\nGET retrieves a representation. POST asks a resource to process submitted data. PUT creates or replaces a representation at a known URI. PATCH applies a partial modification whose meaning depends on the patch format.\n\n## Example\n\nGET /questions reads a list; POST /auth/register submits a signup; PUT /profile replaces a profile; PATCH /profile may change only a display name.\n\n## Interview Pitfall\n\nHTTP method choice does not itself enforce permissions. GET should not be used for state changes, and PATCH is not automatically idempotent."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "HTTP",
+    "titleEn": "How should you interpret common HTTP error codes?",
+    "difficulty": "Easy",
+    "tags": [
+      "Networking",
+      "HTTP"
+    ],
+    "isPro": false,
+    "orderIndex": 102,
+    "contentEn": "## Short Answer\n\n400 means the request is invalid; 401 means authentication is required or invalid; 403 means access is refused; 404 means the resource was not found. 429 signals rate limiting. 500 is an unexpected server error; 502 is an invalid upstream response; 503 signals temporary unavailability.\n\n## Example\n\nA reverse proxy may return 502 when an API process has stopped. Inspect proxy and application logs to identify the failed hop.\n\n## Interview Pitfall\n\nA status code narrows the investigation but does not prove the root cause. A 403 can come from application policy, storage permissions, or a gateway."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "CORS",
+    "titleEn": "What does CORS protect and what does it not protect?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "CORS"
+    ],
+    "isPro": false,
+    "orderIndex": 103,
+    "contentEn": "## Short Answer\n\nCORS controls whether browser JavaScript may read responses from another origin. The server advertises permitted origins through response headers; some requests require an OPTIONS preflight. It is a browser rule, not authentication.\n\n## Example\n\nA frontend on app.example.com calls api.example.com. The API allows that exact origin so the browser can expose the JSON response.\n\n## Interview Pitfall\n\nNon-browser clients can ignore CORS, so it cannot protect a public API from attackers. Scheme, hostname and port all contribute to the origin."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "DNS",
+    "titleEn": "What is the difference between A, AAAA and CNAME DNS records?",
+    "difficulty": "Easy",
+    "tags": [
+      "Networking",
+      "DNS"
+    ],
+    "isPro": false,
+    "orderIndex": 104,
+    "contentEn": "## Short Answer\n\nAn A record maps a name to an IPv4 address; AAAA maps it to IPv6. A CNAME makes one name an alias of another DNS name, which is then resolved. These records locate hosts, not URL paths.\n\n## Example\n\napi.example.com can have an A record for a server IP, while www.example.com can alias a hosting provider's hostname.\n\n## Interview Pitfall\n\nDo not put https:// or /api in a DNS target. A normal CNAME cannot coexist with other records at the same name, making the zone apex special."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "DNS",
+    "titleEn": "What is DNS TTL and how does negative caching affect debugging?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "DNS"
+    ],
+    "isPro": false,
+    "orderIndex": 105,
+    "contentEn": "## Short Answer\n\nTTL tells resolvers how long a DNS answer may remain cached. Negative answers such as NXDOMAIN can also be cached, with limits derived from the zone's SOA record. Different resolvers may temporarily show different answers after a change.\n\n## Example\n\nCompare your local resolver with an authoritative nameserver. If the authoritative record is correct but a recursive resolver still has an old answer, caching may explain the difference.\n\n## Interview Pitfall\n\nFlushing your PC cache does not clear an ISP's cache. A successful lookup from one resolver is not proof that all delegation and DNSSEC settings are correct."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Proxies",
+    "titleEn": "What is a reverse proxy and how does it differ from a forward proxy?",
+    "difficulty": "Easy",
+    "tags": [
+      "Networking",
+      "Proxies"
+    ],
+    "isPro": false,
+    "orderIndex": 106,
+    "contentEn": "## Short Answer\n\nA forward proxy acts for clients making outbound requests. A reverse proxy sits in front of servers, accepts incoming requests, and forwards them to a backend. It can handle TLS, routing and request limits.\n\n## Example\n\nCaddy accepts HTTPS traffic for an API and forwards it to a container on an internal port. The browser sees the public domain, not the container address.\n\n## Interview Pitfall\n\nTrust forwarded client-IP headers only through a known proxy path. Accepting arbitrary spoofed headers can undermine IP-based access controls."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Troubleshooting",
+    "titleEn": "How do timeout and connection-refused errors differ?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "Troubleshooting"
+    ],
+    "isPro": false,
+    "orderIndex": 107,
+    "contentEn": "## Short Answer\n\nConnection refused usually means a reachable host actively rejected the connection, often because no process listens on that port. A timeout means the connection did not complete before the deadline, possibly due to dropped packets, routing, firewall rules or an unavailable host.\n\n## Example\n\nCheck DNS, the target port, listening processes, firewall rules and network routes. Compare requests from the application network and from your laptop.\n\n## Interview Pitfall\n\nA timeout does not prove a security-group problem. Treat these errors as evidence to investigate rather than a complete diagnosis."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "TLS",
+    "titleEn": "What is TLS termination and where can it happen?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "TLS"
+    ],
+    "isPro": false,
+    "orderIndex": 108,
+    "contentEn": "## Short Answer\n\nTLS termination means decrypting an incoming TLS connection at a proxy or server. The next hop may use plain HTTP on a restricted network or a second TLS connection. The choice affects trust boundaries and certificate management.\n\n## Example\n\nA proxy terminates HTTPS from a browser, then forwards HTTP to an API container on a private network. Re-encrypt the second hop when its threat model requires it.\n\n## Interview Pitfall\n\nHTTPS on the public connection does not imply every internal hop is encrypted. Never disable certificate validation simply to make a connection work."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Ports",
+    "titleEn": "Why do services need ports as well as IP addresses?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "Ports"
+    ],
+    "isPro": false,
+    "orderIndex": 109,
+    "contentEn": "## Short Answer\n\nAn IP address identifies a host or interface; a transport port identifies a service endpoint on it. TCP and UDP have separate port spaces. Server listening ports are usually fixed; client source ports are often ephemeral.\n\n## Example\n\nA browser connects to TCP 443 for HTTPS. Docker can publish host port 5000 while the API listens on container port 8080.\n\n## Interview Pitfall\n\nA process listening on localhost is not necessarily reachable from another container. Publishing a port and allowing it through a firewall are separate steps."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "HTTP caching",
+    "titleEn": "How do Cache-Control and ETag help HTTP caching?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "HTTP caching"
+    ],
+    "isPro": false,
+    "orderIndex": 110,
+    "contentEn": "## Short Answer\n\nCache-Control describes freshness and cache permissions. An ETag identifies a representation version; a client can send If-None-Match and receive 304 when unchanged. Validation avoids retransmitting content while freshness can avoid the request entirely.\n\n## Example\n\nUse long-lived caching for versioned assets and revalidation for an app's entry HTML. A new asset filename avoids serving an older cached script.\n\n## Interview Pitfall\n\nno-cache means revalidate, not never store; no-store forbids storage. Avoid sharing personalized responses through a public cache."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Connections",
+    "titleEn": "How does connection pooling improve API performance?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "Connections"
+    ],
+    "isPro": false,
+    "orderIndex": 111,
+    "contentEn": "## Short Answer\n\nPooling reuses connections instead of creating one per operation, reducing repeated handshakes and connection setup. A pool has finite capacity, so slow requests or leaked connections can make later requests wait.\n\n## Example\n\nReuse an HTTP client for calls to an email provider. Database connection pools similarly reuse authenticated connections while requests acquire and release them.\n\n## Interview Pitfall\n\nBigger pools can overload the downstream server. Track pool waits and ensure connections are disposed or returned reliably."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Real-time traffic",
+    "titleEn": "When should you choose WebSockets instead of polling?",
+    "difficulty": "Medium",
+    "tags": [
+      "Networking",
+      "Real-time traffic"
+    ],
+    "isPro": false,
+    "orderIndex": 112,
+    "contentEn": "## Short Answer\n\nPolling repeatedly asks for updates. WebSockets keep a connection open for two-way messages and suit frequent interactive updates. Polling can be simpler for infrequent changes; server-sent events suit one-way server updates.\n\n## Example\n\nA live chat may use WebSockets, while a build-status page can poll every few seconds. Compare update frequency and infrastructure complexity.\n\n## Interview Pitfall\n\nLong-lived connections need heartbeats, reconnection and resource limits. A reconnected client may need to recover missed messages."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "Retries",
+    "titleEn": "How should clients retry network requests safely?",
+    "difficulty": "Hard",
+    "tags": [
+      "Networking",
+      "Retries"
+    ],
+    "isPro": false,
+    "orderIndex": 113,
+    "contentEn": "## Short Answer\n\nRetry transient failures only when the operation is safe to repeat. Use bounded attempts, exponential backoff and random jitter. Respect deadlines and Retry-After when available. An idempotency key can help prevent duplicate state changes.\n\n## Example\n\nIf a payment request times out, the server may already have processed it. Reuse the same idempotency key rather than blindly submitting another payment.\n\n## Interview Pitfall\n\nDo not retry every 4xx error. Unbounded or synchronized retries increase load precisely when a dependency is struggling."
+  },
+  {
+    "category": "Networking",
+    "subcategory": "DNS delegation",
+    "titleEn": "How do nameservers and DNS delegation determine who answers for a domain?",
+    "difficulty": "Hard",
+    "tags": [
+      "Networking",
+      "DNS delegation"
+    ],
+    "isPro": false,
+    "orderIndex": 114,
+    "contentEn": "## Short Answer\n\nA parent zone delegates a domain to authoritative nameservers. Recursive resolvers follow that delegation to obtain records. The registrar's nameserver setting and the hosted zone's records must describe a consistent authority.\n\n## Example\n\nWhen moving DNS providers, copy application and email records first, then update delegation to the new provider's assigned nameservers and verify authoritative answers.\n\n## Interview Pitfall\n\nDifferent authoritative servers serving inconsistent zones cause intermittent failures. Check delegation, DNSSEC and record contents before assuming the problem is only a browser cache."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Transactions",
+    "titleEn": "What are transaction isolation levels and their trade-offs?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Transactions"
+    ],
+    "isPro": false,
+    "orderIndex": 101,
+    "contentEn": "## Short Answer\n\nIsolation controls which concurrent changes a transaction can observe. Read Committed, Repeatable Read and Serializable offer progressively stronger guarantees, with database-specific behavior. Stronger isolation may increase locking, retries or contention.\n\n## Example\n\nTwo transactions reserving the last seat must not both succeed. Use an atomic conditional update or an appropriate transaction and locking strategy.\n\n## Interview Pitfall\n\nKnowing the isolation-level name is insufficient; understand your database's implementation. Serializable transactions may fail and require a retry of the entire transaction."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Concurrency",
+    "titleEn": "What is optimistic concurrency control?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Concurrency"
+    ],
+    "isPro": false,
+    "orderIndex": 102,
+    "contentEn": "## Short Answer\n\nOptimistic concurrency lets work proceed without holding a lock for its entire duration. A version value is checked when saving; if another writer changed the row, the update fails rather than silently overwriting it.\n\n## Example\n\nUPDATE profiles SET name = ..., version = version + 1 WHERE id = ... AND version = expected. Zero updated rows indicate a conflict.\n\n## Interview Pitfall\n\nThe caller must decide whether to reload, merge or retry. Blindly retrying with stale values defeats the protection."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Concurrency",
+    "titleEn": "When should you use pessimistic locking?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Concurrency"
+    ],
+    "isPro": false,
+    "orderIndex": 103,
+    "contentEn": "## Short Answer\n\nPessimistic locking reserves access to rows while a transaction completes, preventing conflicting operations from proceeding at the same time. It is useful when conflicts are frequent and the work is short.\n\n## Example\n\nLock an inventory row, check stock, decrement it, then commit. Keep the transaction brief and acquire multiple locks in a consistent order.\n\n## Interview Pitfall\n\nLong-held locks reduce throughput and can deadlock. A row lock does not magically protect unrelated rows or an entire business invariant."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Indexes",
+    "titleEn": "What is a composite index and why does column order matter?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Indexes"
+    ],
+    "isPro": false,
+    "orderIndex": 104,
+    "contentEn": "## Short Answer\n\nA composite index orders multiple columns together. For a B-tree index, leading columns typically determine which predicates can efficiently narrow the scan. Matching filter and sort patterns is more useful than indexing every field.\n\n## Example\n\nAn index on (category, created_at) helps fetch recent questions within a category. An index on created_at alone may better suit a global chronological list.\n\n## Interview Pitfall\n\nUse the query plan to confirm behavior. Additional indexes consume storage and add write work; column-order rules depend on the index type and query."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Query plans",
+    "titleEn": "How do you investigate a slow SQL query?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Query plans"
+    ],
+    "isPro": false,
+    "orderIndex": 105,
+    "contentEn": "## Short Answer\n\nStart with the actual query, parameters, duration and frequency. Inspect its execution plan for row estimates, scans, joins and sorts. Check indexing, statistics, blocking and I/O before rewriting it.\n\n## Example\n\nA selective lookup doing a full table scan may need an index, while a query reading most rows may correctly prefer a scan.\n\n## Interview Pitfall\n\nEXPLAIN ANALYZE executes the statement. Be especially careful with writes and production workloads; a sequential scan is not automatically a mistake."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Pagination",
+    "titleEn": "What is keyset pagination and when is it better than offset pagination?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Pagination"
+    ],
+    "isPro": false,
+    "orderIndex": 106,
+    "contentEn": "## Short Answer\n\nOffset pagination skips a number of rows; later pages can become expensive and concurrent inserts can shift positions. Keyset pagination uses the last seen ordered values as a cursor and seeks forward from them.\n\n## Example\n\nFor newest-first items, order by created_at and id, then request rows after the cursor in that ordering. An appropriate index supports the seek.\n\n## Interview Pitfall\n\nUse a unique tie-breaker for stable ordering. Keyset pagination is less convenient when users need to jump directly to arbitrary page numbers."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Constraints",
+    "titleEn": "Why should important rules be enforced with database constraints?",
+    "difficulty": "Easy",
+    "tags": [
+      "DB",
+      "Constraints"
+    ],
+    "isPro": false,
+    "orderIndex": 107,
+    "contentEn": "## Short Answer\n\nConstraints protect stored data regardless of which client writes it. Primary keys identify rows, foreign keys enforce references, unique constraints prevent duplicates, and check constraints restrict valid values.\n\n## Example\n\nA unique email constraint prevents two concurrent signup requests from inserting the same email, even if both pass an application-level existence check.\n\n## Interview Pitfall\n\nApplication validation improves error messages but cannot replace concurrency-safe database rules. Handle constraint violations rather than exposing raw database errors."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Transactions",
+    "titleEn": "How do you handle a database write followed by an external email or API call?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Transactions"
+    ],
+    "isPro": false,
+    "orderIndex": 108,
+    "contentEn": "## Short Answer\n\nA database transaction cannot normally roll back an independent external service. Decide how to recover when the database write succeeds but the external call fails. A durable outbox stores pending messages in the same transaction for later delivery.\n\n## Example\n\nCreate an unverified account and an outbox message together. A worker sends the email and records delivery progress; a resend action provides a user recovery path.\n\n## Interview Pitfall\n\nCatching the email exception avoids a 500 but does not guarantee delivery. Consumers and send attempts need idempotency because retries can produce duplicates."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Migrations",
+    "titleEn": "How can database migrations break a deployment?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Migrations"
+    ],
+    "isPro": false,
+    "orderIndex": 109,
+    "contentEn": "## Short Answer\n\nA migration changes schema or data and can take locks, rebuild indexes or remove fields older application versions still need. Review the generated SQL and plan compatibility and recovery before deployment.\n\n## Example\n\nAdd a nullable column, deploy code that can use it, backfill data, then enforce constraints later. This separates a risky large change into smaller steps.\n\n## Interview Pitfall\n\nReverting application code does not necessarily reverse the database migration. Destructive changes require tested backups and a clear recovery procedure."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Backups",
+    "titleEn": "What is the difference between a backup and a replica?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Backups"
+    ],
+    "isPro": false,
+    "orderIndex": 110,
+    "contentEn": "## Short Answer\n\nA backup is a recoverable copy from an earlier point. A replica follows changes from the primary to improve availability or read capacity. Replication can quickly copy an accidental deletion, so it is not a substitute for backups.\n\n## Example\n\nAfter a destructive update, restore a backup or use point-in-time recovery if available. A current replica may already contain the same bad change.\n\n## Interview Pitfall\n\nA backup is only useful if restoration works. Test restores, protect backup access and define acceptable data loss and recovery time."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Pooling",
+    "titleEn": "How can database connection pools become exhausted?",
+    "difficulty": "Medium",
+    "tags": [
+      "DB",
+      "Pooling"
+    ],
+    "isPro": false,
+    "orderIndex": 111,
+    "contentEn": "## Short Answer\n\nRequests wait when all pooled connections are busy. Causes include slow queries, long transactions, connections not returned, or a pool too small for demand. Adding application instances also increases total database connections.\n\n## Example\n\nMeasure active connections, wait time and query duration. Fix a long-held transaction before simply increasing pool size.\n\n## Interview Pitfall\n\nMore connections can worsen database contention. Set a connection budget across all app instances and leave capacity for maintenance and administration."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Replication",
+    "titleEn": "How does replication lag affect application behavior?",
+    "difficulty": "Hard",
+    "tags": [
+      "DB",
+      "Replication"
+    ],
+    "isPro": false,
+    "orderIndex": 112,
+    "contentEn": "## Short Answer\n\nAn asynchronous replica can return older data than the primary. This improves read capacity but creates a delay between a successful write and its visibility on replica reads. Applications must choose consistency requirements explicitly.\n\n## Example\n\nAfter updating a profile, read from the primary for confirmation or route that user's immediate reads appropriately. Monitor lag and define failover behavior.\n\n## Interview Pitfall\n\nA replica is not always safe for decisions requiring fresh data, such as checking available inventory. Failover can also lose recently acknowledged writes depending on replication guarantees."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Partitioning",
+    "titleEn": "How is table partitioning different from sharding?",
+    "difficulty": "Hard",
+    "tags": [
+      "DB",
+      "Partitioning"
+    ],
+    "isPro": false,
+    "orderIndex": 113,
+    "contentEn": "## Short Answer\n\nPartitioning splits a logical table into pieces, often within one database, based on a key such as date. Sharding distributes data across separate database nodes. Both require choosing keys that fit access patterns.\n\n## Example\n\nMonthly partitions can make retention and time-bounded scans easier. Sharding by tenant can spread load across machines but complicates cross-tenant queries.\n\n## Interview Pitfall\n\nPartitioning does not automatically distribute load across servers. Sharding introduces routing, cross-shard operations, rebalancing and operational complexity."
+  },
+  {
+    "category": "DB",
+    "subcategory": "Deletion",
+    "titleEn": "What should you consider before enabling cascading deletes?",
+    "difficulty": "Hard",
+    "tags": [
+      "DB",
+      "Deletion"
+    ],
+    "isPro": false,
+    "orderIndex": 114,
+    "contentEn": "## Short Answer\n\nCascading deletes automatically remove dependent rows when a parent is deleted. They can maintain referential consistency but may remove more data than expected. The relationship's lifecycle should determine the policy.\n\n## Example\n\nDeleting a test user may cascade to personal quiz attempts, while shared questions should remain. Preview the affected relationships and use a transaction for sensitive cleanup.\n\n## Interview Pitfall\n\nDo not assume every foreign key cascades. Soft deletion, audit retention and legal requirements may require preserving records instead."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Processes",
+    "titleEn": "What does a process exit code tell you?",
+    "difficulty": "Easy",
+    "tags": [
+      "OS",
+      "Processes"
+    ],
+    "isPro": false,
+    "orderIndex": 101,
+    "contentEn": "## Short Answer\n\nAn exit code reports how a process ended to its caller. Conventionally zero means success and nonzero means failure, but each program defines its own codes. Supervisors and shell scripts use them to decide what to do next.\n\n## Example\n\nA container restarts repeatedly because its main process exits nonzero. Read the application log before the exit rather than relying only on the restart count.\n\n## Interview Pitfall\n\nA successful exit code does not prove a service is ready or behaving correctly. Pipelines can also mask an earlier failing command unless configured carefully."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Permissions",
+    "titleEn": "How do Unix file permissions work?",
+    "difficulty": "Easy",
+    "tags": [
+      "OS",
+      "Permissions"
+    ],
+    "isPro": false,
+    "orderIndex": 102,
+    "contentEn": "## Short Answer\n\nUnix permissions assign read, write and execute bits to owner, group and others. For directories, execute permits traversal while read permits listing names. Access also depends on parent directories and other controls.\n\n## Example\n\nchmod 600 on a secrets file grants its owner read and write and denies group and others. A service must still run as the appropriate user to read it.\n\n## Interview Pitfall\n\nAvoid solving permission errors with chmod 777. Check ownership, directory traversal and the actual service user instead."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Signals",
+    "titleEn": "What is the difference between SIGTERM and SIGKILL?",
+    "difficulty": "Easy",
+    "tags": [
+      "OS",
+      "Signals"
+    ],
+    "isPro": false,
+    "orderIndex": 103,
+    "contentEn": "## Short Answer\n\nSIGTERM asks a process to terminate and can be handled for cleanup. SIGKILL forces termination and cannot be handled. Graceful shutdown usually starts with SIGTERM and escalates only if the process does not exit in time.\n\n## Example\n\nAn API handles termination by stopping new requests and completing or cancelling in-flight work before exiting.\n\n## Interview Pitfall\n\nForced termination cannot guarantee application cleanup. Use deadlines so shutdown does not wait forever, and ensure partially completed operations can recover."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Memory",
+    "titleEn": "What is an out-of-memory kill and how do you investigate it?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Memory"
+    ],
+    "isPro": false,
+    "orderIndex": 104,
+    "contentEn": "## Short Answer\n\nAn out-of-memory condition occurs when required memory cannot be satisfied within system or cgroup limits. The OS may kill a process to recover. Container limits can trigger this even when the host has spare memory.\n\n## Example\n\nCheck container termination details, kernel logs, configured memory limits and memory usage over time. Look for sustained growth, spikes and excessive concurrency.\n\n## Interview Pitfall\n\nA larger memory limit may hide a leak without fixing it. An abrupt exit alone does not prove OOM; verify the evidence."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Swap",
+    "titleEn": "What is swap and why is it not a replacement for RAM?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Swap"
+    ],
+    "isPro": false,
+    "orderIndex": 105,
+    "contentEn": "## Short Answer\n\nSwap stores memory pages on disk to make room in RAM. It can help with infrequent memory pressure, but disk access is much slower than RAM. Heavy swapping can make a system nearly unresponsive.\n\n## Example\n\nA small development VM may use swap during occasional peaks. Watch swap activity and latency rather than judging health by free memory alone.\n\n## Interview Pitfall\n\nDo not rely on swap to support a consistently oversized workload. Container swap limits and host configuration can change which processes can use it."
+  },
+  {
+    "category": "OS",
+    "subcategory": "CPU",
+    "titleEn": "How is high CPU usage different from high load average?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "CPU"
+    ],
+    "isPro": false,
+    "orderIndex": 106,
+    "contentEn": "## Short Answer\n\nCPU usage measures time spent executing work. Linux load average counts runnable tasks and tasks in uninterruptible sleep, commonly waiting on I/O. Therefore load can be high even when CPU usage is modest.\n\n## Example\n\nA database waiting on a slow disk may show rising load and I/O wait. Inspect CPU, task states, storage metrics and application latency together.\n\n## Interview Pitfall\n\nCompare load with available CPUs and workload context. High load is a symptom, not a direct instruction to add CPU cores."
+  },
+  {
+    "category": "OS",
+    "subcategory": "File descriptors",
+    "titleEn": "What are file descriptors and why can running out break a service?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "File descriptors"
+    ],
+    "isPro": false,
+    "orderIndex": 107,
+    "contentEn": "## Short Answer\n\nA file descriptor is a process's handle for an open resource, such as a file, socket or pipe. Per-process and system limits bound their number. Leaks or excessive concurrent connections can exhaust them.\n\n## Example\n\nAn API begins failing to accept connections with 'too many open files'. Check descriptor counts, open sockets and whether resources are disposed.\n\n## Interview Pitfall\n\nRaising the limit may provide headroom but does not fix a resource leak. Include connection and file cleanup in failure paths."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Containers",
+    "titleEn": "How do containers differ from virtual machines?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Containers"
+    ],
+    "isPro": false,
+    "orderIndex": 108,
+    "contentEn": "## Short Answer\n\nContainers isolate processes while sharing the host kernel. Virtual machines run a guest OS on virtualized hardware. Containers usually start faster and package applications with less overhead, while VMs offer a separate-kernel boundary.\n\n## Example\n\nAn API and Redis run as separate containers on one VM. Each container has its own filesystem view and process environment, but both depend on the same host.\n\n## Interview Pitfall\n\nA container is not a full machine or an absolute security boundary. Limit privileges and resources and keep the host patched."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Namespaces",
+    "titleEn": "What do Linux namespaces contribute to container isolation?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Namespaces"
+    ],
+    "isPro": false,
+    "orderIndex": 109,
+    "contentEn": "## Short Answer\n\nNamespaces give processes separate views of resources such as process IDs, network interfaces and mounts. A process can see its own network and filesystem view without seeing the host's full view.\n\n## Example\n\nA container's localhost refers to that container's network namespace, so another container's service is usually reached by a network hostname rather than localhost.\n\n## Interview Pitfall\n\nNamespaces isolate views, not resource consumption. CPU and memory limits are provided by other mechanisms such as cgroups."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Cgroups",
+    "titleEn": "How do cgroups control container resources?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Cgroups"
+    ],
+    "isPro": false,
+    "orderIndex": 110,
+    "contentEn": "## Short Answer\n\nControl groups account for and constrain groups of processes. They can limit memory and CPU usage and provide resource statistics. Containers use them to avoid one workload consuming all host resources.\n\n## Example\n\nSet a memory limit for an API and monitor its actual usage. A CPU quota can throttle it even when the physical host has idle capacity.\n\n## Interview Pitfall\n\nResource limits need measurement. Too-small limits cause OOM kills or latency; no limits can let one service starve the others."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Services",
+    "titleEn": "Why should a server application run under a process supervisor?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Services"
+    ],
+    "isPro": false,
+    "orderIndex": 111,
+    "contentEn": "## Short Answer\n\nA supervisor starts services, tracks their state, manages logs and can restart them after failure. It also provides startup ordering and controlled shutdown. Running a long-lived service from an interactive shell is fragile.\n\n## Example\n\nA Docker restart policy or systemd unit keeps an API running after a crash or reboot. Read restart counts and logs to identify persistent failures.\n\n## Interview Pitfall\n\nRepeated restart loops are not recovery if the root cause persists. Add health checks and alerts rather than hiding failures through endless restarts."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Storage",
+    "titleEn": "Why can a disk be full even after deleting a large log file?",
+    "difficulty": "Medium",
+    "tags": [
+      "OS",
+      "Storage"
+    ],
+    "isPro": false,
+    "orderIndex": 112,
+    "contentEn": "## Short Answer\n\nOn Unix-like systems, deleting a filename does not release its data while a process still holds the file open. Disk space is reclaimed after the last open handle closes. Inodes can also be exhausted independently of bytes.\n\n## Example\n\nCompare filesystem usage with file sizes and inspect deleted-but-open files. Rotate logs properly or ask the owning service to reopen its log safely.\n\n## Interview Pitfall\n\nRestarting every service is disruptive. Identify the owner and use its supported log rotation or reopen mechanism; also check inode usage."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Thread pools",
+    "titleEn": "What is thread-pool starvation in a web application?",
+    "difficulty": "Hard",
+    "tags": [
+      "OS",
+      "Thread pools"
+    ],
+    "isPro": false,
+    "orderIndex": 113,
+    "contentEn": "## Short Answer\n\nStarvation occurs when work needs pool threads but available workers are occupied, often by blocking calls. Requests queue and latency rises even without high CPU. Async I/O can free workers while operations wait.\n\n## Example\n\nA .NET API calling Task.Result on slow I/O may hold worker threads. Use async all the way and monitor queue length, thread count and request latency.\n\n## Interview Pitfall\n\nIncreasing the thread count may mask the symptom. Async code that still blocks or starts excessive work can also overload dependencies."
+  },
+  {
+    "category": "OS",
+    "subcategory": "Concurrency",
+    "titleEn": "What is a race condition and how can you prevent it?",
+    "difficulty": "Hard",
+    "tags": [
+      "OS",
+      "Concurrency"
+    ],
+    "isPro": false,
+    "orderIndex": 114,
+    "contentEn": "## Short Answer\n\nA race condition occurs when correctness depends on an uncontrolled ordering of concurrent operations. Shared state needs atomic operations, locks or another coordination mechanism. Protect the entire read-modify-write sequence, not only one step.\n\n## Example\n\nTwo workers read stock = 1 and each writes stock = 0 while accepting two orders. An atomic database update with a condition prevents the double reservation.\n\n## Interview Pitfall\n\nA local mutex protects only threads sharing that process. Multiple application instances may need database constraints or other coordination."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "CI/CD",
+    "titleEn": "What is the difference between continuous integration and continuous deployment?",
+    "difficulty": "Easy",
+    "tags": [
+      "Cloud",
+      "CI/CD"
+    ],
+    "isPro": false,
+    "orderIndex": 101,
+    "contentEn": "## Short Answer\n\nContinuous integration builds and checks changes regularly, usually with automated tests. Continuous delivery prepares deployable releases with an optional approval step. Continuous deployment automatically releases passing changes to the target environment.\n\n## Example\n\nA pull request runs build and tests. A merge triggers a deployment that publishes a container and updates the running application.\n\n## Interview Pitfall\n\nHaving a CI workflow beside a deploy workflow does not ensure deployment waits for tests. The dependency or branch protection must be explicitly configured."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "IAM",
+    "titleEn": "Why are short-lived credentials preferable to stored access keys?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "IAM"
+    ],
+    "isPro": false,
+    "orderIndex": 102,
+    "contentEn": "## Short Answer\n\nShort-lived credentials expire and can be issued to a workload identity for a specific role. This reduces the exposure of a leaked credential and avoids manually distributing permanent keys. Permissions still need to be scoped.\n\n## Example\n\nA CI runner presents an identity token to a cloud provider and obtains temporary credentials to publish an image. Restrict the role to the intended repository and branch.\n\n## Interview Pitfall\n\nTemporary credentials are not harmless if stolen while valid. Trust policy and permissions matter just as much as credential lifetime."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Docker images",
+    "titleEn": "What is the difference between a Docker image and a container?",
+    "difficulty": "Easy",
+    "tags": [
+      "Cloud",
+      "Docker images"
+    ],
+    "isPro": false,
+    "orderIndex": 103,
+    "contentEn": "## Short Answer\n\nAn image is a packaged template containing filesystem layers and runtime configuration. A container is a running or stopped instance of that image, with its own writable layer and process lifecycle.\n\n## Example\n\nBuild the API once as an image, store it in a registry, and run the same image on a server. Multiple containers can be created from one image.\n\n## Interview Pitfall\n\nData written only into a container's writable layer can disappear when it is replaced. Use volumes or external storage for persistent data."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Builds",
+    "titleEn": "Why use a multi-stage Docker build?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Builds"
+    ],
+    "isPro": false,
+    "orderIndex": 104,
+    "contentEn": "## Short Answer\n\nMulti-stage builds separate compiling from running. The build stage contains the SDK and tools; the runtime stage receives only published output and required runtime dependencies. This reduces image size and unnecessary tools.\n\n## Example\n\nCompile a .NET app in an SDK image, then copy the published files into a runtime image and run under a non-root user.\n\n## Interview Pitfall\n\nSmaller does not automatically mean secure. Keep base images updated, avoid copying secrets, and ensure required runtime files are included."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Health checks",
+    "titleEn": "How do liveness and readiness checks differ?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Health checks"
+    ],
+    "isPro": false,
+    "orderIndex": 105,
+    "contentEn": "## Short Answer\n\nLiveness asks whether a process is alive enough to keep running. Readiness asks whether it can serve requests now. These checks guide restarts and traffic routing differently; dependencies should be chosen carefully.\n\n## Example\n\nAn API can be alive but not ready while initialization runs. A lightweight liveness endpoint avoids restarting it just because a database is briefly slow.\n\n## Interview Pitfall\n\nChecking every dependency in liveness can create restart storms. A 200 from a simple health endpoint does not prove login or database queries work."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Deployments",
+    "titleEn": "How do rolling and blue-green deployments differ?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Deployments"
+    ],
+    "isPro": false,
+    "orderIndex": 106,
+    "contentEn": "## Short Answer\n\nA rolling deployment replaces instances gradually. Blue-green prepares a second environment and switches traffic after verification. Both need compatible data changes and meaningful health checks to reduce failed releases.\n\n## Example\n\nRun a new API version alongside the old one, verify it, then move traffic. Keep a rollback path while checking errors and latency.\n\n## Interview Pitfall\n\nRestarting a single container on one server is not zero-downtime deployment. Blue-green also costs extra capacity and does not undo schema changes automatically."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Reliability",
+    "titleEn": "What are SLI, SLO and an error budget?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Reliability"
+    ],
+    "isPro": false,
+    "orderIndex": 107,
+    "contentEn": "## Short Answer\n\nAn SLI is a measured indicator such as successful-request ratio. An SLO is the target for that indicator over a defined period. The error budget is the allowed amount of failure under that target.\n\n## Example\n\nFor a 99.9% successful-request SLO over a month, at most 0.1% of eligible requests may fail. Define which requests and errors are counted.\n\n## Interview Pitfall\n\nRequest-based budgets and time-based downtime are different measurements. A target is only useful when the measurement and observation window are clear."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Observability",
+    "titleEn": "How do logs, metrics and traces help troubleshooting?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Observability"
+    ],
+    "isPro": false,
+    "orderIndex": 108,
+    "contentEn": "## Short Answer\n\nLogs record individual events. Metrics summarize measurements over time. Traces connect spans across one request's path. Together they help identify when a problem started, its impact and where time or failures accumulate.\n\n## Example\n\nA latency metric shows a spike; a trace identifies a slow database call; logs provide the corresponding exception and request context.\n\n## Interview Pitfall\n\nAvoid passwords and tokens in logs. High-cardinality metric labels, such as an unbounded user ID, can make monitoring expensive."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Recovery",
+    "titleEn": "What do RTO and RPO mean?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Recovery"
+    ],
+    "isPro": false,
+    "orderIndex": 109,
+    "contentEn": "## Short Answer\n\nRecovery Time Objective is the target time to restore service after an incident. Recovery Point Objective is the acceptable amount of lost data measured in time. They influence backup frequency, replication and recovery procedures.\n\n## Example\n\nA system may aim to recover within one hour and lose at most fifteen minutes of data. Its restore and backup process must support both targets.\n\n## Interview Pitfall\n\nA written target is not evidence that you can meet it. Run recovery drills, measure restore time and verify the recovered data."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Infrastructure as code",
+    "titleEn": "What does Terraform state do and why must it be protected?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Infrastructure as code"
+    ],
+    "isPro": false,
+    "orderIndex": 110,
+    "contentEn": "## Short Answer\n\nState records Terraform's mapping between configuration and managed resources, along with resource attributes. It helps determine planned changes. State may contain sensitive values, so storage, access and locking need careful handling.\n\n## Example\n\nBefore applying a change, inspect the plan against the correct state and environment. Importing an existing resource records it in state but still requires matching configuration.\n\n## Interview Pitfall\n\nDo not commit state or secret variable files. A staging name alone does not guarantee no shared resources or account-level settings will be affected."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Secrets",
+    "titleEn": "How should an application receive secrets in production?",
+    "difficulty": "Medium",
+    "tags": [
+      "Cloud",
+      "Secrets"
+    ],
+    "isPro": false,
+    "orderIndex": 111,
+    "contentEn": "## Short Answer\n\nKeep secrets outside source code and frontend bundles. Deliver them through restricted runtime configuration or a secret store, grant only required access, and plan rotation. Separate secrets from ordinary configuration.\n\n## Example\n\nAn API receives a database password and email-provider key at runtime. Its browser frontend receives only a public API URL, never the provider key.\n\n## Interview Pitfall\n\nEnvironment variables can still leak through logs, diagnostics or overly broad access. Marking a value sensitive does not encrypt every place it is stored."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Incidents",
+    "titleEn": "How should you respond when a deployed website stops working?",
+    "difficulty": "Hard",
+    "tags": [
+      "Cloud",
+      "Incidents"
+    ],
+    "isPro": false,
+    "orderIndex": 112,
+    "contentEn": "## Short Answer\n\nConfirm user impact, inspect recent changes, and trace the request path through DNS, frontend, proxy, API and database. Prefer a safe mitigation such as rollback while collecting evidence. Communicate impact and follow with a root-cause review.\n\n## Example\n\nA 502 response leads you to proxy logs and API health; an API connection timeout leads you to dependency and network checks. Test each boundary separately.\n\n## Interview Pitfall\n\nDo not change several unrelated settings at once. A successful test from one machine does not establish global recovery."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Rate limiting",
+    "titleEn": "How does in-memory rate limiting behave with multiple API instances?",
+    "difficulty": "Hard",
+    "tags": [
+      "Cloud",
+      "Rate limiting"
+    ],
+    "isPro": false,
+    "orderIndex": 113,
+    "contentEn": "## Short Answer\n\nAn in-memory limiter tracks requests within one process. Each replica has its own counters, so traffic spread across replicas can exceed an intended global limit. Process restarts also reset counters.\n\n## Example\n\nA five-per-minute limit on each of three instances is not necessarily five per minute overall. Use shared coordination or a gateway when a global limit is required.\n\n## Interview Pitfall\n\nPer-IP limits can group users behind NAT and can be evaded across IPs. Combine appropriate user or account dimensions and trusted client-IP handling."
+  },
+  {
+    "category": "Cloud",
+    "subcategory": "Caching",
+    "titleEn": "What are cache-aside and cache-stampede problems?",
+    "difficulty": "Hard",
+    "tags": [
+      "Cloud",
+      "Caching"
+    ],
+    "isPro": false,
+    "orderIndex": 114,
+    "contentEn": "## Short Answer\n\nWith cache-aside, the application reads cache first and queries the database on a miss, then stores the result. A stampede happens when many clients miss the same entry at once and all hit the origin.\n\n## Example\n\nAfter a popular entry expires, coalesce concurrent loads or use a bounded lock. Expiry jitter spreads different keys' expirations; stale serving can help when safe.\n\n## Interview Pitfall\n\nCache invalidation must match consistency needs. Do not treat Redis as the only durable copy unless persistence and recovery are deliberately designed."
+  }
+]

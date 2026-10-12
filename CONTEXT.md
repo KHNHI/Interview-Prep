@@ -3,6 +3,16 @@
 
 ## Current architecture update (2026-10-12)
 
+Question bank expansion: **112 Q&A questions** (42 original + 70 new in
+`InterviewPlatform.API/SeedData/questions-expansion.json`). Added 14 questions per
+category: DSA, Networking, DB, OS and Cloud. New answers include a short explanation,
+an example and an interview pitfall; all new entries are free and English-only.
+Final category totals: DSA 24, Networking 22, DB 22, OS 22, Cloud 22.
+Q&A seeding is now incremental: append entries missing by normalized category/title,
+preserve existing IDs and edited content, and avoid duplicates on later startups.
+Other seed types are unchanged. Startup applies this to local and deployed databases;
+no schema migration is required. Three seed regression tests cover this behavior.
+
 MediatR has been removed. Controllers call Application Services directly through
 constructor-injected interfaces. No mediator, command/query handler, or validation
 pipeline remains in the executable code.
