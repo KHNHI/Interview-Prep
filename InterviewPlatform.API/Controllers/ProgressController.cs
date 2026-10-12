@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using InterviewPlatform.Application.Features.Progress.Queries.GetDashboard;
-using InterviewPlatform.Application.Features.Progress.Queries.GetRadar;
-using MediatR;
+using InterviewPlatform.Application.Features.Progress;
+using InterviewPlatform.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,8 +12,8 @@ namespace InterviewPlatform.API.Controllers;
 [Authorize]
 public class ProgressController : ControllerBase
 {
-    private readonly IMediator _mediator;
-    public ProgressController(IMediator mediator) => _mediator = mediator;
+    private readonly IProgressService _service;
+    public ProgressController(IProgressService service) => _service = service;
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard(CancellationToken ct)
@@ -22,7 +21,7 @@ public class ProgressController : ControllerBase
         if (!Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
             return Unauthorized();
 
-        var result = await _mediator.Send(new GetDashboardQuery(userId), ct);
+        var result = await _service.GetDashboardAsync(new GetDashboardRequest(userId), ct);
         return Ok(new { success = true, data = result });
     }
 
@@ -32,7 +31,10 @@ public class ProgressController : ControllerBase
         if (!Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
             return Unauthorized();
 
-        var result = await _mediator.Send(new GetRadarQuery(userId), ct);
+        var result = await _service.GetRadarAsync(new GetRadarRequest(userId), ct);
         return Ok(new { success = true, data = result });
     }
 }
+
+
+

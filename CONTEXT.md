@@ -1,6 +1,36 @@
 # InterviewPrep — Developer Context File
 > Read this at the start of every new session. It contains all decisions, structure, and state of the project.
 
+## Current architecture update (2026-10-12)
+
+MediatR has been removed. Controllers call Application Services directly through
+constructor-injected interfaces. No mediator, command/query handler, or validation
+pipeline remains in the executable code.
+
+Request flow: `HTTP → Controller → Application Service → database/email interfaces`.
+
+- `Application/Services/`: AuthService, QuestionsService, QuizService,
+  FlashcardsService, ProgressService, SystemDesignService, with matching interfaces.
+- `Application/Features/<feature>/`: plain request records, response DTOs and
+  validators; the old Commands/Queries folders have been flattened.
+- `AuthService.RegisterAsync` explicitly calls
+  `RegisterRequestValidator.ValidateAndThrowAsync` before saving or sending email.
+- `API/Program.cs` registers the six services with `AddScoped`.
+- Routes, JSON fields, auth requirements, rate limiting and database schema are
+  unchanged. No database migration or frontend change is required.
+- The unit suite calls services directly; three registration regression tests were
+  added for password validation, non-fatal email and pending-account registration.
+  Total: 26 tests.
+
+Deployment update: frontend has moved to Cloudflare Pages; API, PostgreSQL and
+Redis have moved to Railway. The AWS workflow is manual-only and retained for
+reference. Email supports `Email__Provider=brevo` through the HTTPS API with
+`Email__Brevo__ApiKey`; SMTP, SES and local console implementations remain available.
+Do not put API keys or other secrets in this document.
+
+The older CQRS and AWS descriptions below describe earlier project versions;
+use this section for the current architecture and deployment.
+
 ---
 
 ## 1. What Is This Project

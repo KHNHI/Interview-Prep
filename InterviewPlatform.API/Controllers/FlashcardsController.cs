@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using InterviewPlatform.Application.Features.Flashcards.Commands.ReviewFlashcard;
-using InterviewPlatform.Application.Features.Flashcards.Queries.GetFlashcards;
-using MediatR;
+using InterviewPlatform.Application.Features.Flashcards;
+using InterviewPlatform.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,8 +12,8 @@ namespace InterviewPlatform.API.Controllers;
 [Authorize]
 public class FlashcardsController : ControllerBase
 {
-    private readonly IMediator _mediator;
-    public FlashcardsController(IMediator mediator) => _mediator = mediator;
+    private readonly IFlashcardsService _service;
+    public FlashcardsController(IFlashcardsService service) => _service = service;
 
     /// <summary>Return cards due for review today (max 20, deduplicated by question).</summary>
     [HttpGet]
@@ -23,7 +22,7 @@ public class FlashcardsController : ControllerBase
         if (!Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
             return Unauthorized();
 
-        var result = await _mediator.Send(new GetFlashcardsQuery(userId), ct);
+        var result = await _service.GetFlashcardsAsync(new GetFlashcardsRequest(userId), ct);
         return Ok(new { success = true, data = result });
     }
 
@@ -34,9 +33,12 @@ public class FlashcardsController : ControllerBase
         if (!Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
             return Unauthorized();
 
-        var result = await _mediator.Send(new ReviewFlashcardCommand(id, userId, body.Rating), ct);
+        var result = await _service.ReviewFlashcardAsync(new ReviewFlashcardRequest(id, userId, body.Rating), ct);
         return Ok(new { success = true, data = result });
     }
 }
 
 public record ReviewRequest(int Rating);
+
+
+

@@ -1,9 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
-using FluentValidation;
-using InterviewPlatform.Application.Common.Behaviours;
+using InterviewPlatform.Application.Services;
 using InterviewPlatform.Infrastructure;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -33,11 +31,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(InterviewPlatform.Application.Features.Auth.Commands.Register.RegisterCommand).Assembly));
 
-builder.Services.AddValidatorsFromAssembly(typeof(InterviewPlatform.Application.Features.Auth.Commands.Register.RegisterCommand).Assembly);
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ISystemDesignService, SystemDesignService>();
+builder.Services.AddScoped<IFlashcardsService, FlashcardsService>();
+builder.Services.AddScoped<IQuestionsService, QuestionsService>();
+builder.Services.AddScoped<IProgressService, ProgressService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
@@ -144,3 +144,6 @@ using (var scope = app.Services.CreateScope())
 app.Run();
 
 public partial class Program { }
+
+
+

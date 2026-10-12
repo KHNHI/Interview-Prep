@@ -1,6 +1,5 @@
-using InterviewPlatform.Application.Features.Questions.Queries.GetQuestionById;
-using InterviewPlatform.Application.Features.Questions.Queries.GetQuestions;
-using MediatR;
+using InterviewPlatform.Application.Features.Questions;
+using InterviewPlatform.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InterviewPlatform.API.Controllers;
@@ -9,8 +8,8 @@ namespace InterviewPlatform.API.Controllers;
 [Route("api/questions")]
 public class QuestionsController : ControllerBase
 {
-    private readonly IMediator _mediator;
-    public QuestionsController(IMediator mediator) => _mediator = mediator;
+    private readonly IQuestionsService _service;
+    public QuestionsController(IQuestionsService service) => _service = service;
 
     /// <summary>List questions with optional filters.</summary>
     [HttpGet]
@@ -22,8 +21,7 @@ public class QuestionsController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var result = await _mediator.Send(
-            new GetQuestionsQuery(category, difficulty, lang, page, pageSize), ct);
+        var result = await _service.GetQuestionsAsync(new GetQuestionsRequest(category, difficulty, lang, page, pageSize), ct);
 
         return Ok(new
         {
@@ -40,7 +38,10 @@ public class QuestionsController : ControllerBase
         [FromQuery] string lang = "en",
         CancellationToken ct = default)
     {
-        var result = await _mediator.Send(new GetQuestionByIdQuery(id, lang), ct);
+        var result = await _service.GetQuestionByIdAsync(new GetQuestionByIdRequest(id, lang), ct);
         return Ok(new { success = true, data = result });
     }
 }
+
+
+
