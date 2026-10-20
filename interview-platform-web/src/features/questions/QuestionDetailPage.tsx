@@ -82,8 +82,8 @@ export function QuestionDetailPage() {
       {/* Header card */}
       <div className="bg-white border border-line rounded shadow-card px-6 py-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2.5">
               {q.tags.map(t => (
                 <span key={t} className="inline-flex items-center px-1.5 py-0.5 rounded-[3px]
                                          text-[11px] font-medium bg-[#eef0e5] text-[#52634f]">

@@ -17,7 +17,7 @@
   remains separate and unchanged; it is not used by question feedback.
 - Disabled by default: enable backend `AnswerFeedback__Enabled=true`, configure
   `Gemini__ApiKey` and `Gemini__Model` explicitly. Example model:
-  `gemini-2.5-flash-lite` (check current project Free Tier quota in AI Studio).
+  `gemini-3.5-flash-lite` (check current project Free Tier quota in AI Studio).
   Never put keys into Vite. Old Anthropic settings do not enable this feature.
   Defaults are 5 attempts/user/day and 30 across the app/day, reset at 00:00 UTC,
   reserved atomically in Redis; failed provider attempts count. Redis outages fail
@@ -39,6 +39,17 @@
   `docs/AI_ANSWER_FEEDBACK_SETUP.md`. Docs remain Git-ignored by existing policy.
 
 ## Frontend update (2026-10-20)
+
+Mobile follow-up: below 901px the workspace uses a full-width top bar with a text
+Menu/Close menu disclosure instead of a persistent sidebar. Desktop compact-view
+preference does not abbreviate mobile labels. Closed navigation is hidden from
+keyboard focus; Escape closes it and restores toggle focus; navigation closes it.
+Mobile uses document scrolling and dynamic viewport height, wrapped question tags,
+16px form inputs, 44px buttons, full-width feedback action on phones, and responsive
+dashboard/progress/quiz/guide grids. Code blocks/tables scroll within their cards.
+Verified via mocked headless Edge at 320/375/390/430/640/768/900/1024/1440px and
+seven study routes, checking both document and main-container horizontal overflow.
+Screenshots/script: `docs/previews/responsive-question-*.png`, `check-responsive.cjs`.
 
 Follow-up polish: content uses the same paper/sage/forest palette as the landing
 page, including badges, code blocks, charts and buttons. System Design now uses

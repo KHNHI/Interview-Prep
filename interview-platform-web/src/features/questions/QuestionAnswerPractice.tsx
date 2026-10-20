@@ -39,7 +39,7 @@ export function QuestionAnswerPractice({ questionId }: { questionId: string }) {
     } finally { if (!controller.signal.aborted) setBusy(false); }
   }
 
-  return <section className="bg-white border border-line rounded shadow-card p-5 sm:p-7" aria-labelledby="practice-heading">
+  return <section className="answer-practice bg-white border border-line rounded shadow-card p-5 sm:p-7" aria-labelledby="practice-heading">
     <h2 id="practice-heading" className="text-[17px] mb-1">Your answer</h2>
     <p id="practice-help" className="text-ink-2 mb-4">Practise in English before reading the reference answer.</p>
     <label htmlFor="practice-answer" className="sr-only">Your interview answer in English</label>

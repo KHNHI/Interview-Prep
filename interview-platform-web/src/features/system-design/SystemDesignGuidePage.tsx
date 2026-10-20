@@ -139,7 +139,7 @@ export function SystemDesignGuidePage() {
       <div className="bg-white border border-line rounded shadow-card px-6 py-5">
         <h2 className="text-[15px] font-semibold text-ink-1 mb-1">The four pillars to keep in mind</h2>
         <p className="text-[12.5px] text-ink-3 mb-4">Tie your decisions back to these throughout the interview.</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {PILLARS.map(p => (
             <div key={p.label} className="border border-line rounded p-3.5 bg-surface-alt">
               <div className="text-[13px] font-semibold text-ink-1 mb-1">{p.label}</div>

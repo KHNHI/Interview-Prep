@@ -1,4 +1,5 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 const NAV = [
   ["/questions", "Question bank", "QA"],
@@ -18,16 +19,32 @@ export default function Sidebar({
 }) {
   const { accessToken, clearAuth } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => setMobileOpen(false), [pathname]);
   function signOut() {
     clearAuth();
     localStorage.removeItem("access_token");
     navigate("/");
   }
   return (
-    <aside className={`workspace-sidebar ${collapsed ? "is-compact" : ""}`}>
+    <aside className={`workspace-sidebar ${collapsed ? "is-compact" : ""} ${mobileOpen ? "mobile-open" : ""}`}
+      onKeyDown={event => {
+        if (event.key === "Escape" && mobileOpen) {
+          setMobileOpen(false); menuButton.current?.focus();
+        }
+      }}>
+      <div className="sidebar-brand-row">
       <Link className="workspace-brand" to="/">
-        {collapsed ? "IP" : "InterviewPrep"}
+        <span className="desktop-brand">{collapsed ? "IP" : "InterviewPrep"}</span>
+        <span className="mobile-brand">InterviewPrep</span>
       </Link>
+      <button ref={menuButton} type="button" className="mobile-menu-toggle"
+        aria-expanded={mobileOpen} aria-controls="study-navigation-panel"
+        onClick={() => setMobileOpen(open => !open)}>{mobileOpen ? "Close menu" : "Menu"}</button>
+      </div>
+      <div id="study-navigation-panel" className="sidebar-content">
       <button
         className="sidebar-toggle"
         onClick={onToggle}
@@ -51,11 +68,13 @@ export default function Sidebar({
               className="sidebar-disabled"
               title="Sign in to use this feature"
             >
-              {collapsed ? short : label}
+              <span className="desktop-brand">{collapsed ? short : label}</span>
+              <span className="mobile-brand">{label}</span>
             </span>
           ) : (
-            <NavLink key={to} to={to} title={label}>
-              {collapsed ? short : label}
+            <NavLink key={to} to={to} title={label} onClick={() => setMobileOpen(false)}>
+              <span className="desktop-brand">{collapsed ? short : label}</span>
+              <span className="mobile-brand">{label}</span>
             </NavLink>
           ),
         )}
@@ -81,6 +100,7 @@ export default function Sidebar({
       >
         {accessToken ? "Sign out" : "Sign in"}
       </button>
+      </div>
     </aside>
   );
 }

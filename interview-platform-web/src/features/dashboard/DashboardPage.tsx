@@ -73,7 +73,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white border border-line rounded shadow-card px-5 py-[18px] animate-pulse">
@@ -100,7 +100,7 @@ export function DashboardPage() {
       </div>
 
       {/* Main content */}
-      <div className="grid grid-cols-[1fr_320px] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5">
         <div className="flex flex-col gap-4">
           {/* Heatmap */}
           <div className="bg-white border border-line rounded shadow-card">

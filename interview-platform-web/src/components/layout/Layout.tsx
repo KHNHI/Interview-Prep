@@ -20,7 +20,7 @@ export default function Layout() {
       <Sidebar collapsed={collapsed} onToggle={toggle} />
       <div className="main-area">
         <Header />
-        <main className="page-content">
+        <main id="workspace-content" className="page-content" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

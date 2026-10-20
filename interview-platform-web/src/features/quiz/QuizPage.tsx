@@ -391,7 +391,7 @@ function QuizScreen({
       </div>
 
       {/* Content grid */}
-      <div className="grid grid-cols-2 gap-5 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1">
         {/* Left — question */}
         <div className="bg-white border border-line rounded shadow-card p-5 flex flex-col gap-3.5">
           <div className="flex items-center gap-2">
