@@ -74,8 +74,8 @@ export function FlashcardPage() {
             Cards you've already reviewed will reappear when they're due again.
           </p>
           <Link to="/quiz"
-            className="mt-1 px-5 py-2 rounded-sm text-[13.5px] font-semibold bg-ink-1 text-white hover:bg-[#2A2A2A] transition-colors">
-            Take a quiz →
+            className="mt-1 px-5 py-2 rounded-sm text-[13.5px] font-semibold bg-ink-1 text-white hover:bg-[#3b614e] transition-colors">
+            Take a quiz
           </Link>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function FlashcardPage() {
             You reviewed all {doneCount} cards due today. Come back tomorrow for the next batch.
           </p>
           <Link to="/dashboard"
-            className="mt-1 px-5 py-2 rounded-sm text-[13.5px] font-semibold bg-ink-1 text-white hover:bg-[#2A2A2A] transition-colors">
+            className="mt-1 px-5 py-2 rounded-sm text-[13.5px] font-semibold bg-ink-1 text-white hover:bg-[#3b614e] transition-colors">
             Back to Dashboard
           </Link>
         </div>
@@ -132,7 +132,7 @@ export function FlashcardPage() {
 
       {/* Card meta */}
       <div className="flex items-center justify-between">
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded-[3px] text-[11px] font-medium bg-[#F0F0F0] text-[#555]">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-[3px] text-[11px] font-medium bg-[#eef0e5] text-[#52634f]">
           {card.category}
         </span>
         <span className="text-[12.5px] text-ink-3">{card.difficulty}</span>
@@ -150,9 +150,7 @@ export function FlashcardPage() {
               {card.front}
             </p>
             <div className="flex items-center gap-1.5 text-ink-3 text-[12px] mt-5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
+
               Click anywhere to reveal answer
             </div>
           </div>
@@ -193,12 +191,9 @@ export function FlashcardPage() {
           <button
             onClick={() => setFlipped(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-[13px] font-medium
-                       bg-canvas text-ink-1 border border-line-strong hover:bg-[#EAEAEA] transition-colors"
+                       bg-canvas text-ink-1 border border-line-strong hover:bg-[#e5eadb] transition-colors"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="1 4 1 10 7 10"/>
-              <path d="M3.51 15a9 9 0 1 0 .49-3.1"/>
-            </svg>
+
             Flip Card
           </button>
         </div>

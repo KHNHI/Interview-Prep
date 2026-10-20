@@ -89,9 +89,7 @@ export function SystemDesignGuidePage() {
       <button onClick={() => navigate("/system-design")}
         className="self-start flex items-center gap-1.5 px-2 py-1 rounded-sm text-[13px]
                    font-medium text-ink-2 hover:bg-canvas hover:text-ink-1 transition-colors -ml-1">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
+
         Back to System Design
       </button>
 
@@ -159,8 +157,8 @@ export function SystemDesignGuidePage() {
         </div>
         <button onClick={() => navigate("/system-design")}
           className="flex-shrink-0 px-4 py-2 rounded-sm text-[13px] font-medium bg-ink-1 text-white
-                     hover:bg-[#2A2A2A] transition-colors">
-          Browse cases →
+                     hover:bg-[#3b614e] transition-colors">
+          Browse cases
         </button>
       </div>
     </div>

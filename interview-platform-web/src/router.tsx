@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import type { ComponentType } from "react";
 import Layout          from "./components/layout/Layout";
 import PublicLayout    from "./components/layout/PublicLayout";
@@ -44,7 +44,7 @@ const router = createBrowserRouter([
       { path: "system-design",       ...lazy(() => import("./features/system-design/SystemDesignPage"),       "SystemDesignPage") },
       { path: "system-design/guide", ...lazy(() => import("./features/system-design/SystemDesignGuidePage"),  "SystemDesignGuidePage") },
       { path: "system-design/:id",   ...lazy(() => import("./features/system-design/SystemDesignDetailPage"), "SystemDesignDetailPage") },
-      { path: "pricing",        ...lazy(() => import("./features/pricing/PricingPage"),          "PricingPage") },
+      { path: "pricing", element: <Navigate to="/" replace /> },
     ],
   },
 

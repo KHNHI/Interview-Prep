@@ -45,26 +45,22 @@ export function DashboardPage() {
           label: "Questions Attempted",
           value: String(data.questionsAttempted),
           delta: "Total quiz answers",
-          icon: "◇",
         },
         {
           label: "Current Streak",
           value: `${data.currentStreak} ${data.currentStreak === 1 ? "day" : "days"}`,
           delta: "Consecutive days active",
-          icon: "◈",
         },
         {
           label: "Avg Accuracy",
           value: `${Math.round(data.correctRate * 100)}%`,
           delta: `${Math.round(data.correctRate * data.questionsAttempted)} of ${data.questionsAttempted} correct`,
-          icon: "◎",
           bar: data.correctRate * 100,
         },
         {
           label: "Active Days",
           value: String(data.quizzesTaken),
           delta: "Days with quiz activity",
-          icon: "◉",
         },
       ]
     : null;
@@ -89,7 +85,7 @@ export function DashboardPage() {
           : (stats ?? []).map(s => (
               <div key={s.label} className="bg-white border border-line rounded shadow-card px-5 py-[18px]">
                 <div className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-label text-ink-3">
-                  <span className="text-[13px] opacity-50">{s.icon}</span>
+
                   {s.label}
                 </div>
                 <div className="text-[30px] font-bold tracking-tight text-ink-1 mt-2 leading-none">{s.value}</div>
@@ -110,10 +106,7 @@ export function DashboardPage() {
           <div className="bg-white border border-line rounded shadow-card">
             <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
               <span className="text-[13px] font-semibold text-ink-1 flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
+
                 Activity History
               </span>
               <span className="text-[11.5px] text-ink-3">Last 36 weeks</span>
@@ -161,7 +154,7 @@ export function DashboardPage() {
                     <div className="h-full bg-ink-1 rounded-full w-1/3" />
                   </div>
                 </div>
-                <button className="flex-shrink-0 px-3 py-1.5 rounded-sm bg-ink-1 text-white text-[12px] font-medium hover:bg-[#2A2A2A] transition-colors">
+                <button className="flex-shrink-0 px-3 py-1.5 rounded-sm bg-ink-1 text-white text-[12px] font-medium hover:bg-[#3b614e] transition-colors">
                   Resume
                 </button>
               </div>
@@ -181,9 +174,7 @@ export function DashboardPage() {
                   <div className="font-medium text-[13px] text-ink-1">{a.label}</div>
                   <div className="text-[11.5px] text-ink-3 mt-0.5">{a.sub}</div>
                 </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3 flex-shrink-0">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
+
               </div>
             ))}
           </div>

@@ -4,11 +4,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas:  "#F3F3F3",
-        surface: { DEFAULT: "#FFFFFF", alt: "#FAFAFA" },
-        ink:  { 1: "#0F0F0F", 2: "#525252", 3: "#9C9C9C" },
-        line: { DEFAULT: "#E6E6E6", strong: "#CCCCCC" },
-        sidebar: "#0F0F0F",
+        canvas:  "#F7F6F0",
+        surface: { DEFAULT: "#FFFEFA", alt: "#EEF0E5" },
+        ink:  { 1: "#253D30", 2: "#52634F", 3: "#6D7965" },
+        line: { DEFAULT: "#DEE1D3", strong: "#BFC9B4" },
+        sidebar: "#244536",
       },
       fontFamily: {
         sans: ["Onest", "-apple-system", "sans-serif"],

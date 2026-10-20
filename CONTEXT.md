@@ -1,6 +1,44 @@
 # InterviewPrep — Developer Context File
 > Read this at the start of every new session. It contains all decisions, structure, and state of the project.
 
+## Frontend update (2026-10-20)
+
+Follow-up polish: content uses the same paper/sage/forest palette as the landing
+page, including badges, code blocks, charts and buttons. System Design now uses
+keyboard-accessible links for the guide and entire case cards, with retry on error.
+Guest navigation renders Flashcards/Dashboard/Progress as grey, disabled non-links
+with an accessible sign-in explanation; authenticated users see regular links.
+Direct protected URLs still require authentication through ProtectedLayout.
+Sign-in/sign-up share AuthLayout and auth.css: compact responsive forms, associated
+labels, autocomplete, Show/Hide password, visible password requirements, inline
+validation, pending states and explicit network/401/403/429 errors. Removed fake
+forgot-password/legal links and testimonial/marketing panels. ResendVerification
+reports failures and includes a 60-second cooldown after a successful request.
+Local headless browser tests with mocked API responses cover guest/authenticated
+navigation, palette, login/register validation and errors, resend, and mobile layout.
+
+- InterviewPrep is non-commercial: no subscription plans, upgrade CTAs, Pro badges
+  or client-side paid-content gates. `/pricing` redirects to `/` for old links.
+  Backend plan/Stripe fields remain for schema compatibility; no schema migration.
+- New text-first landing page: warm paper background, dark green accents, serif
+  headings; no gradients or decorative icons. Shared navigation and palette match.
+- Home interactions: five topic-specific sample Q&A previews, reveal answer,
+  self-reflection feedback, next question, 10/15/30-minute suggested study plans,
+  topic links into Q&A/quiz and native FAQ disclosure controls.
+- Q&A and quiz read `?category=` on initial entry. Guest quizzes have no attempt
+  cap. Sign-in is still required for personal dashboard, flashcards and analytics.
+- All System Design sections are readable without a plan check, including Deep
+  Dive and Trade-offs. Existing `isPro` API fields are ignored by the UI.
+- Removed misleading marketing statistics, unimplemented AI/mock-interview claims,
+  decorative SVG icons and fake notification/language controls. Charts remain.
+- Main files: `features/landing/LandingPage.tsx`, `features/landing/landing.css`,
+  shared layout components, `index.css`, `tailwind.config.js`.
+- Verified with production build and local headless browser checks at desktop and
+  390px mobile width. API responses were mocked for routing/content-gate checks;
+  this was not a live backend integration test.
+
+Older monetization/design descriptions below are historical; this update takes precedence.
+
 ## Current architecture update (2026-10-12)
 
 Question bank expansion: **112 Q&A questions** (42 original + 70 new in

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { questionsApi } from "../../api/questions.api";
 import { cn } from "../../utils/cn";
@@ -8,13 +8,14 @@ const CATEGORIES  = ["All", "DSA", "Networking", "DB", "Cloud", "OS", "System De
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 
 const DIFFICULTY_STYLE: Record<string, string> = {
-  Easy:   "bg-[#EFEFEF] text-[#3A3A3A]",
-  Medium: "bg-[#E5E5E5] text-[#252525]",
-  Hard:   "bg-[#DCDCDC] text-[#1A1A1A]",
+  Easy:   "bg-[#edf0e3] text-[#52634f]",
+  Medium: "bg-[#e4e9d8] text-[#3c5433]",
+  Hard:   "bg-[#d9e2cb] text-[#354c2e]",
 };
 
 export function QuestionsPage() {
-  const [cat,    setCat]    = useState("All");
+  const [params] = useSearchParams();
+  const [cat,    setCat]    = useState(() => CATEGORIES.includes(params.get("category") ?? "") ? params.get("category")! : "All");
   const [diff,   setDiff]   = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [page,   setPage]   = useState(1);
@@ -47,20 +48,18 @@ export function QuestionsPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div>
           <h1 className="text-[22px] font-bold tracking-tight">Q&A Bank</h1>
           <p className="text-[13px] text-ink-3 mt-1">
-            Master technical concepts with our curated question database.
+            Pick a topic. Think it through. Read the explanation at your own pace.
           </p>
         </div>
         <div className="relative flex items-center flex-shrink-0">
-          <svg width="14" height="14" className="absolute left-2.5 text-ink-3 pointer-events-none"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+
           <input
-            className="pl-8 pr-3 py-1.5 border border-line rounded-sm bg-white text-[13px]
+            aria-label="Search questions on this page"
+            className="px-3 py-1.5 border border-line rounded-sm bg-white text-[13px]
                        text-ink-1 placeholder-ink-3 focus:outline-none focus:border-line-strong w-60"
             placeholder="Search questions..."
             value={search}
@@ -113,10 +112,10 @@ export function QuestionsPage() {
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center px-5 py-4 border-b border-line last:border-b-0 gap-3">
                 <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-[#F0F0F0] rounded w-3/4 animate-pulse" />
-                  <div className="h-2.5 bg-[#F0F0F0] rounded w-1/4 animate-pulse" />
+                  <div className="h-3.5 bg-[#eef0e5] rounded w-3/4 animate-pulse" />
+                  <div className="h-2.5 bg-[#eef0e5] rounded w-1/4 animate-pulse" />
                 </div>
-                <div className="h-5 w-14 bg-[#F0F0F0] rounded animate-pulse" />
+                <div className="h-5 w-14 bg-[#eef0e5] rounded animate-pulse" />
               </div>
             ))}
           </div>
@@ -138,15 +137,11 @@ export function QuestionsPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="font-medium text-[13.5px] text-ink-1">{q.title}</span>
-                {q.isPro && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-[3px]
-                                   text-[11px] font-semibold bg-ink-1 text-white">Pro</span>
-                )}
               </div>
               <div className="flex gap-1 flex-wrap">
                 {q.tags.map(t => (
                   <span key={t} className="inline-flex items-center px-1.5 py-0.5 rounded-[3px]
-                                           text-[11px] font-medium bg-[#F0F0F0] text-[#555]">
+                                           text-[11px] font-medium bg-[#eef0e5] text-[#52634f]">
                     {t}
                   </span>
                 ))}
@@ -154,7 +149,7 @@ export function QuestionsPage() {
             </div>
             <div className="flex items-center gap-2.5 flex-shrink-0">
               <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-[3px] text-[11px] font-semibold",
-                DIFFICULTY_STYLE[q.difficulty] ?? "bg-[#EFEFEF] text-[#3A3A3A]")}>
+                DIFFICULTY_STYLE[q.difficulty] ?? "bg-[#edf0e3] text-[#52634f]")}>
                 {q.difficulty}
               </span>
               <button
@@ -182,7 +177,7 @@ export function QuestionsPage() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             className="px-2.5 py-1 rounded-sm text-[12px] font-medium bg-canvas text-ink-1
-                       border border-line-strong hover:bg-[#EAEAEA] disabled:opacity-40 transition-colors">
+                       border border-line-strong hover:bg-[#e5eadb] disabled:opacity-40 transition-colors">
             ‹
           </button>
           {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(p => (
@@ -190,7 +185,7 @@ export function QuestionsPage() {
               className={cn("min-w-[32px] px-2.5 py-1 rounded-sm text-[12px] font-medium border transition-colors",
                 p === page
                   ? "bg-ink-1 text-white border-ink-1"
-                  : "bg-canvas text-ink-1 border-line-strong hover:bg-[#EAEAEA]"
+                  : "bg-canvas text-ink-1 border-line-strong hover:bg-[#e5eadb]"
               )}>
               {p}
             </button>
@@ -199,7 +194,7 @@ export function QuestionsPage() {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-2.5 py-1 rounded-sm text-[12px] font-medium bg-canvas text-ink-1
-                       border border-line-strong hover:bg-[#EAEAEA] disabled:opacity-40 transition-colors">
+                       border border-line-strong hover:bg-[#e5eadb] disabled:opacity-40 transition-colors">
             ›
           </button>
         </div>

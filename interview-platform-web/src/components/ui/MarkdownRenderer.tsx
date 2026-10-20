@@ -20,7 +20,7 @@ export function MarkdownRenderer({ text }: { text: string }) {
         i++;
       }
       elements.push(
-        <pre key={i} className="bg-[#F4F4F4] border border-line rounded-md px-4 py-3.5
+        <pre key={i} className="bg-[#eef0e5] border border-line rounded-md px-4 py-3.5
                                 text-[12px] font-mono overflow-x-auto my-3.5 leading-relaxed text-ink-1">
           <code>{block.join("\n")}</code>
         </pre>
@@ -65,7 +65,7 @@ export function MarkdownRenderer({ text }: { text: string }) {
               <thead>
                 <tr className="border-b border-line">
                   {rows[0].map((cell, ci) => (
-                    <th key={ci} className="text-left px-3 py-2 font-semibold text-ink-1 bg-[#F9F9F9]">
+                    <th key={ci} className="text-left px-3 py-2 font-semibold text-ink-1 bg-[#f7f8f0]">
                       {cell}
                     </th>
                   ))}
@@ -73,7 +73,7 @@ export function MarkdownRenderer({ text }: { text: string }) {
               </thead>
               <tbody>
                 {rows.slice(1).map((row, ri) => (
-                  <tr key={ri} className="border-b border-line last:border-b-0 hover:bg-[#FAFAFA]">
+                  <tr key={ri} className="border-b border-line last:border-b-0 hover:bg-[#f7f8f0]">
                     {row.map((cell, ci) => (
                       <td key={ci} className="px-3 py-2 text-ink-2"><InlineMarkdown text={cell} /></td>
                     ))}
@@ -124,7 +124,7 @@ function InlineMarkdown({ text }: { text: string }) {
         if (part.startsWith("**") && part.endsWith("**"))
           return <strong key={i} className="font-semibold text-ink-1">{part.slice(2, -2)}</strong>;
         if (part.startsWith("`") && part.endsWith("`"))
-          return <code key={i} className="font-mono text-[12px] bg-[#F0F0F0] px-1 py-0.5 rounded text-ink-1">{part.slice(1, -1)}</code>;
+          return <code key={i} className="font-mono text-[12px] bg-[#eef0e5] px-1 py-0.5 rounded text-ink-1">{part.slice(1, -1)}</code>;
         return <span key={i}>{part}</span>;
       })}
     </>

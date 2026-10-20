@@ -2,146 +2,155 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { authApi } from "../../api/auth.api";
+import axios from "axios";
 import { Link } from "react-router-dom";
+import { authApi } from "../../api/auth.api";
+import { AuthLayout } from "./AuthLayout";
+import { PasswordInput } from "./PasswordInput";
+import { ResendVerification } from "./ResendVerification";
+import { authErrorMessage } from "./authErrors";
 
 const schema = z.object({
-  name:     z.string().min(2, "At least 2 characters"),
-  email:    z.string().email("Enter a valid email"),
-  password: z.string()
-    .min(8, "At least 8 characters")
-    .regex(/[A-Z]/, "Add at least one uppercase letter")
-    .regex(/[^A-Za-z0-9]/, "Add at least one special character"),
+  name: z.string().trim().min(2, "Enter at least 2 characters."),
+  email: z.string().trim().email("Enter a valid email address."),
+  password: z
+    .string()
+    .min(8, "Use at least 8 characters.")
+    .regex(/[A-Z]/, "Add an uppercase letter.")
+    .regex(/[^A-Za-z0-9]/, "Add a symbol."),
 });
 type FormData = z.infer<typeof schema>;
 
-const FEATURES = [
-  { icon: "◇", label: "10,000+ curated questions across topics" },
-  { icon: "◈", label: "SM-2 spaced repetition for flashcards"   },
-  { icon: "◉", label: "AI-powered mock interview feedback"       },
-  { icon: "◎", label: "Track readiness with skill radar charts"  },
-];
-
 export function RegisterPage() {
-  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { password: "" },
+  });
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
-  const [resent, setResent] = useState(false);
+  const password = watch("password");
 
-  const onSubmit = async (data: FormData) => {
+  async function onSubmit(data: FormData) {
+    clearErrors("root");
     try {
       const res = await authApi.register(data.email, data.name, data.password);
       setSubmittedEmail(res.data.data.email);
-    } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
-      setError("email", {
-        message: status === 401
-          ? "That email is already registered."
-          : "Registration failed. Please try again.",
+    } catch (error) {
+      setError("root", {
+        message:
+          axios.isAxiosError(error) && error.response?.status === 401
+            ? "This email is already registered. Sign in instead."
+            : authErrorMessage(
+                error,
+                "Could not create your account. Please try again.",
+              ),
       });
     }
-  };
+  }
 
-  const resend = async () => {
-    if (!submittedEmail) return;
-    try { await authApi.resendVerification(submittedEmail); setResent(true); } catch { /* ignore */ }
-  };
+  if (submittedEmail)
+    return (
+      <AuthLayout>
+        <p className="auth-kicker">One more step</p>
+        <h1>Check your email</h1>
+        <p className="auth-description">
+          Open the verification link for{" "}
+          <span className="auth-email">{submittedEmail}</span> to activate your
+          account. Check spam if it has not arrived.
+        </p>
+        <ResendVerification email={submittedEmail} />
+        <p className="auth-switch">
+          <Link to="/login">Back to sign in</Link>
+        </p>
+      </AuthLayout>
+    );
 
   return (
-    <div className="min-h-screen flex font-sans">
-      {/* Left dark panel */}
-      <div className="w-[400px] bg-sidebar flex flex-col flex-shrink-0 px-10 py-12">
-        <div className="mb-auto">
-          <div className="text-[14px] font-bold text-white tracking-tight">InterviewPrep</div>
-          <div className="text-[10.5px] text-white/30 mt-0.5">Engineering Mastery</div>
+    <AuthLayout>
+      <p className="auth-kicker">Your workspace</p>
+      <h1>Create an account</h1>
+      <p className="auth-description">
+        Save your practice and track your progress.
+      </p>
+      <form
+        className="auth-form"
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        aria-busy={isSubmitting}
+      >
+        <div className="auth-field">
+          <label htmlFor="register-name">Name</label>
+          <input
+            id="register-name"
+            {...register("name")}
+            autoComplete="name"
+            placeholder="Your name"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "register-name-error" : undefined}
+          />
+          {errors.name && (
+            <p id="register-name-error" className="auth-error" role="alert">
+              {errors.name.message}
+            </p>
+          )}
         </div>
-        <div className="flex flex-col gap-4">
-          {FEATURES.map(f => (
-            <div key={f.label} className="flex items-start gap-3">
-              <span className="text-white/40 text-[14px] mt-0.5 flex-shrink-0">{f.icon}</span>
-              <span className="text-[13px] text-white/65 leading-snug">{f.label}</span>
-            </div>
-          ))}
+        <div className="auth-field">
+          <label htmlFor="register-email">Email</label>
+          <input
+            id="register-email"
+            {...register("email")}
+            type="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="you@example.com"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "register-email-error" : undefined}
+          />
+          {errors.email && (
+            <p id="register-email-error" className="auth-error" role="alert">
+              {errors.email.message}
+            </p>
+          )}
         </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center bg-canvas px-6 py-10">
-        {submittedEmail ? (
-          /* ── Check your email ── */
-          <div className="w-full max-w-[360px] text-center">
-            <div className="w-12 h-12 rounded-full bg-ink-1 flex items-center justify-center mx-auto mb-5">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>
-              </svg>
-            </div>
-            <h1 className="text-[22px] font-bold tracking-tight text-ink-1">Check your email</h1>
-            <p className="text-[13.5px] text-ink-2 mt-2 leading-relaxed">
-              We sent a verification link to{" "}
-              <span className="font-semibold text-ink-1">{submittedEmail}</span>.
-              Click it to activate your account.
-            </p>
-            <p className="text-[12.5px] text-ink-3 mt-5">
-              Didn't get it?{" "}
-              {resent
-                ? <span className="text-ink-2 font-medium">Sent again ✓</span>
-                : <button onClick={resend} className="text-ink-1 font-medium underline underline-offset-[3px]">Resend link</button>}
-            </p>
-            <Link to="/login" className="inline-block mt-6 text-[13px] text-ink-1 font-medium underline underline-offset-[3px]">
-              Back to sign in
-            </Link>
+        <div className="auth-field">
+          <label htmlFor="register-password">Password</label>
+          <PasswordInput
+            id="register-password"
+            {...register("password")}
+            autoComplete="new-password"
+            aria-invalid={!!errors.password}
+            aria-describedby={`password-requirements${errors.password ? " register-password-error" : ""}`}
+          />
+          <div id="password-requirements" className="auth-requirements">
+            <span data-met={password.length >= 8}>8+ characters</span>
+            <span data-met={/[A-Z]/.test(password)}>One uppercase letter</span>
+            <span data-met={/[^A-Za-z0-9]/.test(password)}>One symbol</span>
           </div>
-        ) : (
-          /* ── Registration form ── */
-          <div className="w-full max-w-[360px]">
-            <div className="mb-7">
-              <h1 className="text-[22px] font-bold tracking-tight text-ink-1">Create your account</h1>
-              <p className="text-[13.5px] text-ink-3 mt-1">Free forever. No credit card required.</p>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Full name</label>
-                <input {...register("name")} placeholder="Nguyen Van A"
-                  className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
-                {errors.name && <p className="text-[11.5px] text-ink-3 mt-1">{errors.name.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Email</label>
-                <input {...register("email")} type="email" placeholder="you@example.com"
-                  className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
-                {errors.email && <p className="text-[11.5px] text-ink-3 mt-1">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">Password</label>
-                <input {...register("password")} type="password" placeholder="8+ chars, 1 uppercase, 1 symbol"
-                  className="w-full px-3 py-2 border border-line rounded-sm bg-white text-[13.5px] text-ink-1 placeholder-ink-3 focus:outline-none focus:border-ink-1 transition-colors" />
-                {errors.password && <p className="text-[11.5px] text-ink-3 mt-1">{errors.password.message}</p>}
-              </div>
-
-              <button type="submit" disabled={isSubmitting}
-                className="w-full py-2.5 mt-1 rounded-sm text-[13px] font-medium bg-ink-1 text-white hover:bg-[#2A2A2A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                {isSubmitting ? "Creating account..." : "Create free account"}
-              </button>
-            </form>
-
-            <p className="text-center text-[13px] text-ink-3 mt-5">
-              Already have an account?{" "}
-              <Link to="/login" className="text-ink-1 font-medium underline underline-offset-[3px]">Sign in</Link>
+          {errors.password && (
+            <p id="register-password-error" className="auth-error" role="alert">
+              {errors.password.message}
             </p>
-
-            <div className="mt-8 pt-5 border-t border-line">
-              <p className="text-[11.5px] text-ink-3 text-center leading-relaxed">
-                By creating an account you agree to our{" "}
-                <span className="underline underline-offset-[2px] cursor-pointer">Terms of Service</span>
-                {" "}and{" "}
-                <span className="underline underline-offset-[2px] cursor-pointer">Privacy Policy</span>.
-              </p>
-            </div>
-          </div>
+          )}
+        </div>
+        {errors.root && (
+          <p className="auth-error" role="alert">
+            {errors.root.message}
+          </p>
         )}
-      </div>
-    </div>
+        <button className="auth-submit" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+      <p className="auth-switch">
+        Already registered? <Link to="/login">Sign in</Link>
+      </p>
+    </AuthLayout>
   );
 }
