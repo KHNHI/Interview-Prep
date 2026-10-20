@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { questionsApi } from "../../api/questions.api";
 import { MarkdownRenderer } from "../../components/ui/MarkdownRenderer";
 import { cn } from "../../utils/cn";
+import { QuestionAnswerPractice } from "./QuestionAnswerPractice";
 
 const DIFFICULTY_STYLE: Record<string, string> = {
   Easy:   "bg-[#edf0e3] text-[#52634f]",
@@ -110,12 +111,13 @@ export function QuestionDetailPage() {
         </div>
       </div>
 
-      {/* Answer */}
-      <div className="bg-white border border-line rounded shadow-card px-7 py-6">
+      <QuestionAnswerPractice key={q.id} questionId={q.id} />
+      <details className="bg-white border border-line rounded shadow-card px-7 py-6">
+        <summary className="cursor-pointer font-semibold">Reference answer</summary>
         <div className="text-[13.5px] leading-[1.75] text-ink-1">
           <MarkdownRenderer text={q.content} />
         </div>
-      </div>
+      </details>
 
       {/* Related questions */}
       <div className="bg-white border border-line rounded shadow-card overflow-hidden">

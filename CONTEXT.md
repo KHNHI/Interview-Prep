@@ -1,6 +1,43 @@
 # InterviewPrep — Developer Context File
 > Read this at the start of every new session. It contains all decisions, structure, and state of the project.
 
+## English AI answer feedback (2026-10-20)
+
+- Implemented an optional English interview-practice MVP on question details:
+  write before opening the reference answer, then request strengths, improvements,
+  English clarity, a sample answer and one follow-up question. No numeric grading.
+- `GET /api/questions/feedback-status` is public; `POST /api/questions/{id}/feedback`
+  requires JWT authentication plus a verified existing account. Application service
+  validates 30–4,000 characters and loads the canonical English question/reference.
+- `GeminiAnswerFeedbackProvider` now uses Google Gemini REST generateContent with
+  an English system instruction, JSON response schema and local validation,
+  30-second timeout, 3,000 output tokens, a 64 KiB response buffer, and no retries.
+  API keys are sent in a redacted header, never in the URL. The Anthropic SDK
+  added for this feature was removed. The older unexposed system-design AI stub
+  remains separate and unchanged; it is not used by question feedback.
+- Disabled by default: enable backend `AnswerFeedback__Enabled=true`, configure
+  `Gemini__ApiKey` and `Gemini__Model` explicitly. Example model:
+  `gemini-2.5-flash-lite` (check current project Free Tier quota in AI Studio).
+  Never put keys into Vite. Old Anthropic settings do not enable this feature.
+  Defaults are 5 attempts/user/day and 30 across the app/day, reset at 00:00 UTC,
+  reserved atomically in Redis; failed provider attempts count. Redis outages fail
+  closed. Additional per-instance limit: 2 requests/user/minute. Limits are not a
+  dollar spending cap; configure provider billing controls independently.
+- UI and feedback are English, use the existing paper/sage/forest design, and keep
+  drafts after request errors. Feedback 401s do not force a redirect. Drafts exist
+  only in page memory and clear on navigation/reload. No answer/history persistence.
+- Validation: 67 unit tests pass, including fake HTTP tests of Gemini request
+  shape, header key, errors, timeouts and truncated output; API Release and frontend
+  production builds pass;
+  mocked headless Edge checks cover guest gating, loading, feedback, editing,
+  401/429/503 draft preservation, provider-off state and mobile width. Existing EF
+  Core dependency version warning remains in the test build. No paid/live AI calls
+  were made; real provider access and output quality still need an owner's smoke test.
+  Gemini Free Tier data processing is disclosed in the form. No explicit context
+  caching is requested, and no billing is required by the application.
+- English plan/setup: `docs/AI_ANSWER_FEEDBACK_PLAN.md` and
+  `docs/AI_ANSWER_FEEDBACK_SETUP.md`. Docs remain Git-ignored by existing policy.
+
 ## Frontend update (2026-10-20)
 
 Follow-up polish: content uses the same paper/sage/forest palette as the landing

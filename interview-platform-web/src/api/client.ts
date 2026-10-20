@@ -17,7 +17,8 @@ client.interceptors.response.use(
     // Don't redirect on 401 from auth endpoints — the catch block in the
     // login/register page handles those and shows the error in-place.
     const isAuthEndpoint = err.config?.url?.startsWith("/auth/");
-    if (err.response?.status === 401 && !isAuthEndpoint) {
+    const isAnswerFeedback = /\/questions\/[^/]+\/feedback$/.test(err.config?.url ?? "");
+    if (err.response?.status === 401 && !isAuthEndpoint && !isAnswerFeedback) {
       // Clear both token keys then hard-reload to /login.
       // A full page reload resets Zustand in-memory state so ProtectedLayout
       // sees no token and the user is properly signed out.

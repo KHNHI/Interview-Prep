@@ -38,6 +38,7 @@ builder.Services.AddScoped<IFlashcardsService, FlashcardsService>();
 builder.Services.AddScoped<IQuestionsService, QuestionsService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
+builder.Services.AddScoped<IAnswerFeedbackService, AnswerFeedbackService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
@@ -78,6 +79,13 @@ builder.Services.AddHealthChecks();
 // client IP because UseForwardedHeaders (below) reads X-Forwarded-For from Caddy.
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy("ai-feedback", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.User.FindFirst("sub")?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            { PermitLimit = 2, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("auth", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -121,9 +129,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<InterviewPlatform.API.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors();
-app.UseRateLimiter();
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");   // ALB / uptime liveness probe (anonymous)

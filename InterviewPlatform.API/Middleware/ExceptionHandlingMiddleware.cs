@@ -38,6 +38,7 @@ public class ExceptionHandlingMiddleware
             EmailNotVerifiedException enve => (HttpStatusCode.Forbidden, enve.Message),
             UnauthorizedException ue => (HttpStatusCode.Unauthorized, ue.Message),
             QuotaExceededException qe => (HttpStatusCode.TooManyRequests, qe.Message),
+            AiUnavailableException ai => (HttpStatusCode.ServiceUnavailable, ai.Message),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
         };
 

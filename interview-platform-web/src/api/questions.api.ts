@@ -30,6 +30,15 @@ export interface QuestionDetailResponse {
   data:    Question;
 }
 
+export interface AnswerFeedback {
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  englishFeedback: string;
+  sampleAnswer: string;
+  followUpQuestion: string;
+}
+
 export interface GetQuestionsParams {
   category?:  string;
   difficulty?: string;
@@ -41,6 +50,9 @@ export interface GetQuestionsParams {
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export const questionsApi = {
+  feedbackStatus: () => client.get<{ data: { available: boolean; dailyLimit: number; maxAnswerLength: number } }>("/questions/feedback-status"),
+  reviewAnswer: (id: string, answer: string, signal: AbortSignal) =>
+    client.post<{ data: AnswerFeedback }>(`/questions/${id}/feedback`, { answer }, { signal, timeout: 40000 }),
   getAll: (params: GetQuestionsParams = {}) =>
     client.get<QuestionsResponse>("/questions", { params }),
 

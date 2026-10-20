@@ -26,6 +26,12 @@ public static class DependencyInjection
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<QuotaService>();
+        services.AddHttpClient<IAnswerFeedbackProvider, GeminiAnswerFeedbackProvider>(http =>
+        {
+            http.Timeout = TimeSpan.FromSeconds(30);
+            http.MaxResponseContentBufferSize = 64 * 1024;
+        }).RedactLoggedHeaders(["x-goog-api-key"]);
+        services.AddScoped<IAnswerFeedbackUsage, AnswerFeedbackUsage>();
         services.AddScoped<IAiFeedbackService, AiFeedbackService>();
 
         services.AddHttpClient<AiFeedbackService>();
