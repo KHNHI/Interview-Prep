@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { systemDesignApi } from "../../api/systemDesign.api";
 import { MarkdownRenderer } from "../../components/ui/MarkdownRenderer";
 import { cn } from "../../utils/cn";
+import { ArchitectureWhiteboard } from "./ArchitectureWhiteboard";
+import { getArchitectureBoard, withoutAsciiSketch } from "./architectureBoards";
+import { InterviewLesson } from "./InterviewLesson";
 
 const DIFFICULTY_STYLE: Record<string, string> = {
   Easy: "bg-[#edf0e3] text-[#52634f]",
@@ -57,6 +60,10 @@ export function SystemDesignDetailPage() {
     );
   }
 
+  if (data.title.trim().toLowerCase() === "design a url shortener") {
+    return <div className="flex flex-col gap-5"><BackButton onClick={() => navigate("/system-design")} /><InterviewLesson key={data.id} title={data.title} /></div>;
+  }
+
   const contentFor: Record<TabKey, string | undefined> = {
     overview: data.overview,
     requirements: data.requirements,
@@ -66,14 +73,15 @@ export function SystemDesignDetailPage() {
   };
 
   const body = contentFor[tab];
+  const board = tab === "highLevelDesign" ? getArchitectureBoard(data.title) : undefined;
 
   return (
-    <div className="max-w-[860px] flex flex-col gap-5">
+    <div className={`${board ? "max-w-[1080px]" : "max-w-[860px]"} flex flex-col gap-5`}>
       <BackButton onClick={() => navigate("/system-design")} />
 
       {/* Header */}
       <div className="bg-white border border-line rounded shadow-card px-6 py-5">
-        <div className="flex items-center gap-2 mb-2.5">
+        <div className="flex flex-wrap items-center gap-2 mb-2.5">
           <span
             className={cn(
               "inline-flex items-center px-1.5 py-0.5 rounded-[3px] text-[11px] font-semibold",
@@ -119,11 +127,12 @@ export function SystemDesignDetailPage() {
       </div>
 
       {/* Two-column: content + hints */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-5 items-start">
+      {board && <ArchitectureWhiteboard key={data.id} board={board} />}
+      <div className={`grid grid-cols-1 ${board ? "xl:grid-cols-[minmax(0,1fr)_260px]" : "lg:grid-cols-[minmax(0,1fr)_260px]"} gap-5 items-start`}>
         {/* Content */}
         <div>
           <div className="bg-white border border-line rounded shadow-card px-6 py-5">
-            {body ? <MarkdownRenderer text={body} /> : <EmptySection />}
+            {body ? <MarkdownRenderer text={board ? withoutAsciiSketch(body) : body} /> : <EmptySection />}
           </div>
         </div>
 

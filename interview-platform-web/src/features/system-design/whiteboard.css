@@ -1,0 +1,52 @@
+.whiteboard { border: 1px solid var(--rule-strong); border-radius: 7px; background: var(--surface); overflow: hidden; }
+.whiteboard-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 24px 26px 18px; }
+.whiteboard-eyebrow { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .11em; margin-bottom: 7px; }
+.whiteboard-heading h2 { font: 400 26px/1.25 Georgia, serif; letter-spacing: -.025em; max-width: 640px; }
+.whiteboard-edition { color: #66755c; font: 13px "Segoe Print", cursive; white-space: nowrap; transform: rotate(-3deg); }
+.whiteboard-tools { padding: 0 26px 14px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+.whiteboard-flows, .whiteboard-zoom { display: flex; flex-wrap: wrap; gap: 5px; }
+.whiteboard-tools button { border: 1px solid var(--rule); padding: 8px 12px; border-radius: 4px; color: var(--forest); font-size: 12px; min-height: 36px; }
+.whiteboard-tools button:hover { background: var(--sage-soft); }
+.whiteboard-tools button[aria-pressed="true"] { background: var(--forest); border-color: var(--forest); color: #fffefa; }
+.whiteboard-tools button:disabled { opacity: .35; cursor: not-allowed; }
+.whiteboard-zoom button { min-width: 36px; padding-inline: 10px; }
+.whiteboard-help { padding: 0 26px 15px; font-size: 12px; color: var(--muted); }
+.whiteboard-canvas { overflow-x: auto; background: #fcfcf7; border-block: 1px solid var(--rule); overscroll-behavior-x: contain; }
+.whiteboard-canvas svg { display: block; height: auto; max-width: none; }
+.whiteboard-annotation { fill: #657456; font: 15px "Segoe Print", "Comic Sans MS", cursive; }
+.board-node { cursor: pointer; outline: none; }
+.board-node-title { font: 600 16px "Onest", sans-serif; fill: #294b3c; }
+.board-node-subtitle { font: 11.5px "Onest", sans-serif; fill: #5f7056; }
+.board-edge-label { font: 12px "Onest", sans-serif; fill: #49634b; paint-order: stroke; stroke: #fcfcf7; stroke-width: 5px; stroke-linejoin: round; }
+.board-node:hover .board-node-outline, .board-node:focus-visible .board-node-outline, .board-node.is-selected .board-node-outline { stroke: #244536; stroke-width: 3; }
+.board-node:focus-visible .board-node-outline { stroke-dasharray: 5 3; }
+.board-node.is-selected .board-node-outline { fill: #dce7ce; }
+.board-edge, .board-node { transition: opacity .2s; }
+.board-edge.is-muted, .board-node.is-muted { opacity: .24; }
+.board-node.is-muted:hover, .board-node.is-muted:focus-visible, .board-node.is-selected { opacity: 1; }
+.whiteboard-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 26px; font-size: 10px; color: var(--muted); border-bottom: 1px solid var(--rule); }
+.whiteboard-component { display: flex; align-items: flex-start; gap: 16px; margin: 20px 26px 0; padding: 18px; border-left: 3px solid #6c875b; background: var(--sage-soft); }
+.whiteboard-component h3 { font-size: 15px; margin-bottom: 7px; }
+.whiteboard-component p:last-child { font-size: 13px; line-height: 1.8; }
+.whiteboard-component button { margin-left: auto; text-decoration: underline; font-size: 12px; min-height: 36px; }
+.whiteboard-walkthrough { padding: 22px 26px 26px; }
+.whiteboard-walkthrough h3 { font-size: 15px; margin-bottom: 16px; }
+.whiteboard-flow-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; }
+.whiteboard-flow-notes h4 { font-size: 12px; color: var(--forest); margin-bottom: 12px; }
+.whiteboard-flow-notes ol { list-style: none; counter-reset: flow-step; }
+.whiteboard-flow-notes li { position: relative; padding-left: 30px; font-size: 12px; color: #52634f; line-height: 1.8; margin-bottom: 12px; counter-increment: flow-step; }
+.whiteboard-flow-notes li::before { content: counter(flow-step, decimal-leading-zero); position: absolute; left: 0; top: 0; font-size: 10px; color: #75866a; border-bottom: 1px solid #bfc9b4; }
+@media (max-width: 680px) {
+  .whiteboard-heading { padding: 20px 18px 14px; }
+  .whiteboard-heading h2 { font-size: 23px; }
+  .whiteboard-edition { display: none; }
+  .whiteboard-tools { padding: 0 18px 12px; }
+  .whiteboard-flows { width: 100%; }
+  .whiteboard-tools button { font-size: 11px; padding-inline: 10px; }
+  .whiteboard-help { padding-inline: 18px; line-height: 1.7; }
+  .whiteboard-help span { display: block; }
+  .whiteboard-legend { padding-inline: 18px; }
+  .whiteboard-walkthrough { padding: 20px 18px; }
+  .whiteboard-component { margin-inline: 18px; padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .board-edge, .board-node { transition: none; } }

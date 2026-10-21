@@ -40,6 +40,37 @@
 
 ## Frontend update (2026-10-20)
 
+### System design whiteboards (2026-10-21)
+
+Curriculum follow-up: the framework guide is now six steps totaling an illustrative
+45 minutes: Clarify 5, Estimate 5, APIs & Data 5, High-Level Design 12, Deep Dives 13,
+Bottlenecks & Wrap-up 5. URL Shortener now has the complete English worked lesson,
+including explicit assumptions/math, HTTP examples/data model, the existing board,
+collision/cache-expiry decisions, failure behavior and monitoring. Each step has
+what to do, interviewer questions, worked example, speaking practice and mistakes.
+Other three cases retain legacy reference tabs/boards and are labelled as reference
+cases. Curated frontend content lives in `interviewFramework.ts`; presentation in
+`InterviewLesson.tsx` / `interview-lesson.css`. Step state uses `?step=` for refresh
+and back navigation. No DB migration/reseed or backend deployment is required.
+Guide/case-list copy now says six steps. Local docs: `docs/SYSTEM_DESIGN_CURRICULUM.md`.
+
+- High-Level Design now displays hand-drawn-style interactive SVG diagrams for all
+  four seeded cases: URL Shortener, Rate Limiter, Twitter / News Feed, Notifications.
+  Diagrams use semantic boxes/stores, labelled arrows, solid/dashed paths and the
+  existing paper/sage/forest palette; no raster assets, gradients or new dependency.
+- Flow buttons highlight the selected request path; selectable keyboard-accessible
+  components explain responsibilities; zoom/reset and a focusable horizontal canvas
+  support small screens. English step-by-step walkthroughs remain readable below.
+  Response arrows are omitted and explicitly documented in the diagram legend.
+- Diagram data lives in `architectureBoards.ts`, rendered by
+  `ArchitectureWhiteboard.tsx` + `whiteboard.css`. Maps known English case titles,
+  not generated database IDs. Unknown cases retain their original Markdown.
+  Known cases replace only the first arrow-based ASCII sketch; prose, data tables
+  and API examples remain. No backend, seed, database or paid AI call is required.
+- Frontend build passes. Mocked headless Edge checks all four cases, flow buttons,
+  keyboard notes, zoom/reset, desktop/mobile overflow, inner canvas scrolling and
+  unknown-case fallback. Local script/screenshots: `docs/previews/check-whiteboards.cjs`.
+
 Mobile follow-up: below 901px the workspace uses a full-width top bar with a text
 Menu/Close menu disclosure instead of a persistent sidebar. Desktop compact-view
 preference does not abbreviate mobile labels. Closed navigation is hidden from
