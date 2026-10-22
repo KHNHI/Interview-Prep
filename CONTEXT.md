@@ -42,6 +42,21 @@
 
 ### System design whiteboards (2026-10-21)
 
+All-case lesson follow-up (2026-10-22): Rate Limiter, Twitter / News Feed and
+Notification System now also use all six steps, with English case-specific worked
+examples, calculations, API/data contracts, speaking practice and common mistakes.
+`additionalLessons.ts` holds the three curricula; `workedLessons.ts` is the shared
+title-to-lesson registry used by detail/list views. `InterviewLesson` receives the
+selected content rather than always rendering URL Shortener. All four known cases
+are labelled full six-step walkthroughs; unknown titles retain legacy Markdown.
+The guide now advertises all four. Case-specific questions can override the common
+framework prompts. Existing diagrams remain in step 4, and URL step links remain
+compatible. No API, migration, reseed, provider calls or production data changes.
+Technical emphasis: token bucket burst/atomicity/outage policy; chronological feed
+fan-out/outbox/hybrid reads/current visibility; notification acceptance versus
+delivery/idempotency/provider limits/retry expiry and duplicate-send ambiguity.
+All scale/latency numbers are hypothetical planning assumptions, not benchmark claims.
+
 Curriculum follow-up: the framework guide is now six steps totaling an illustrative
 45 minutes: Clarify 5, Estimate 5, APIs & Data 5, High-Level Design 12, Deep Dives 13,
 Bottlenecks & Wrap-up 5. URL Shortener now has the complete English worked lesson,

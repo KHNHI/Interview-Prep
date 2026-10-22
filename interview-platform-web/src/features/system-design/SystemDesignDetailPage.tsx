@@ -7,6 +7,7 @@ import { cn } from "../../utils/cn";
 import { ArchitectureWhiteboard } from "./ArchitectureWhiteboard";
 import { getArchitectureBoard, withoutAsciiSketch } from "./architectureBoards";
 import { InterviewLesson } from "./InterviewLesson";
+import { getWorkedLesson } from "./workedLessons";
 
 const DIFFICULTY_STYLE: Record<string, string> = {
   Easy: "bg-[#edf0e3] text-[#52634f]",
@@ -60,8 +61,9 @@ export function SystemDesignDetailPage() {
     );
   }
 
-  if (data.title.trim().toLowerCase() === "design a url shortener") {
-    return <div className="flex flex-col gap-5"><BackButton onClick={() => navigate("/system-design")} /><InterviewLesson key={data.id} title={data.title} /></div>;
+  const lesson = getWorkedLesson(data.title);
+  if (lesson) {
+    return <div className="flex flex-col gap-5"><BackButton onClick={() => navigate("/system-design")} /><InterviewLesson key={data.id} title={data.title} content={lesson} /></div>;
   }
 
   const contentFor: Record<TabKey, string | undefined> = {

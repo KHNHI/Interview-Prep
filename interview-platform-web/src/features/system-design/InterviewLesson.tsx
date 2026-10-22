@@ -1,16 +1,17 @@
 import { useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { INTERVIEW_STEPS, URL_SHORTENER_LESSON } from "./interviewFramework";
+import { INTERVIEW_STEPS } from "./interviewFramework";
+import type { WorkedLesson } from "./workedLessons";
 import { MarkdownRenderer } from "../../components/ui/MarkdownRenderer";
 import { ArchitectureWhiteboard } from "./ArchitectureWhiteboard";
 import { getArchitectureBoard } from "./architectureBoards";
 import "./interview-lesson.css";
 
-export function InterviewLesson({ title }: { title: string }) {
+export function InterviewLesson({ title, content }: { title: string; content: WorkedLesson }) {
   const [params, setParams] = useSearchParams();
   const index = Math.max(0, INTERVIEW_STEPS.findIndex(step => step.id === params.get("step")));
   const step = INTERVIEW_STEPS[index];
-  const lesson = URL_SHORTENER_LESSON[index];
+  const lesson = content.sections[index];
   const heading = useRef<HTMLHeadingElement>(null);
   function go(next: number) {
     const updated = new URLSearchParams(params); updated.set("step", INTERVIEW_STEPS[next].id);
@@ -37,10 +38,10 @@ export function InterviewLesson({ title }: { title: string }) {
     </header>
     <div className="lesson-primer">
       <section><h3>What to do</h3><p>{step.goal}</p><p className="lesson-deliverable"><strong>Leave this step with:</strong> {step.output}</p></section>
-      <section><h3>Ask the interviewer</h3><ul>{step.questions.map(question => <li key={question}>{question}</li>)}</ul></section>
+      <section><h3>Ask the interviewer</h3><ul>{(lesson.questions ?? step.questions).map(question => <li key={question}>{question}</li>)}</ul></section>
     </div>
     {board && <ArchitectureWhiteboard board={board} />}
-    <section className="lesson-example" aria-label="Worked example"><p className="lesson-kicker">Worked example · URL Shortener</p><MarkdownRenderer text={lesson.example} /></section>
+    <section className="lesson-example" aria-label="Worked example"><p className="lesson-kicker">Worked example · {content.label}</p><MarkdownRenderer text={lesson.example} /></section>
     <section className="lesson-speaking"><p className="lesson-kicker">What to say</p><h3>Try explaining it out loud</h3><blockquote>{lesson.say}</blockquote><p>Use this as a starting point. Explain the reasoning rather than memorizing the wording.</p></section>
     <section className="lesson-mistakes"><h3>Common mistakes</h3><ul>{lesson.mistakes.map(mistake => <li key={mistake}>{mistake}</li>)}</ul></section>
     <footer className="lesson-pagination">
@@ -68,6 +69,6 @@ export function FrameworkGuide() {
       <h3>What to say</h3><blockquote>{step.say}</blockquote>
       <h3>Common mistake</h3><p>{step.mistake}</p>
     </section>)}
-    <section className="lesson-speaking"><h2>Practise the complete example</h2><p>URL Shortener follows all six steps, including capacity calculations, API examples, the interactive whiteboard and failure scenarios. The other cases currently use the shorter reference format.</p><Link to="/system-design">Choose URL Shortener from the case list</Link></section>
+    <section className="lesson-speaking"><h2>Practise a complete example</h2><p>URL Shortener, Rate Limiter, Twitter / News Feed and Notification System each follow all six steps, including capacity calculations, API examples, an interactive whiteboard and failure scenarios.</p><Link to="/system-design">Choose a worked case</Link></section>
   </div>;
 }

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { systemDesignApi } from "../../api/systemDesign.api";
+import { getWorkedLesson } from "./workedLessons";
 
 export function SystemDesignPage() {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -22,7 +23,7 @@ export function SystemDesignPage() {
         <div>
           <small>Start here</small>
           <h2>How to approach a system design interview</h2>
-          <p>A six-step framework, with a complete URL Shortener walkthrough.</p>
+          <p>A six-step framework, with complete worked interviews for all four cases.</p>
         </div>
         <span>Read the guide</span>
       </Link>
@@ -78,7 +79,7 @@ export function SystemDesignPage() {
                 ))}
               </div>
               <footer>
-                <span>{c.title.trim().toLowerCase() === "design a url shortener" ? "Full six-step walkthrough" : "Reference case"}</span>
+                <span>{getWorkedLesson(c.title) ? "Full six-step walkthrough" : "Reference case"}</span>
                 <span className="study-read">Read case</span>
               </footer>
             </Link>
